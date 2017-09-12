@@ -1,0 +1,22 @@
+{
+  "name": "mash",
+  "version": "0.0.2",
+  "description": "Mash Hub",
+  "main": "mash.js",
+  "scripts": {
+    "start": "node --use_strict mash.js"
+  },
+  "author": "Jonathan Jones-Morris <jons@soda.co.uk>",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.17.2",
+    "express": "^4.15.3",
+    "jsonwebtoken": "^7.4.1",
+    "mongodb": "^2.2.30",
+    "nodemailer": "^4.0.1",
+    "pug": "^2.0.0-rc.2",
+    "socket.io": "^1.7.2",
+    "ws": "^2.3.1"
+  }
+}

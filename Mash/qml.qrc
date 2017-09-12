@@ -1,0 +1,31 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>qtquickcontrols2.conf</file>
+        <file>shaders/metaballs.frag</file>
+        <file>shaders/lines.frag</file>
+        <file>shaders/passthrough.vert</file>
+        <file>shaders/fuzzy.frag</file>
+        <file>shaders/hoop.frag</file>
+        <file>shaders/lissajous.frag</file>
+        <file>shaders/balls.frag</file>
+        <file>ImageMash.qml</file>
+        <file>shaders/clouds.frag</file>
+        <file>shaders/glitch.frag</file>
+        <file>Background.qml</file>
+        <file>shaders/sweep.frag</file>
+        <file>shaders/distort.frag</file>
+        <file>shaders/colourflow.frag</file>
+        <file>shaders/grayflow.frag</file>
+        <file>shaders/dynamicflow.frag</file>
+        <file>shaders/underwatercaustics.frag</file>
+        <file>shaders/composite.frag</file>
+        <file>TextMash.qml</file>
+        <file>shaders/underwatercaustics-offset.frag</file>
+        <file>shaders/colourflow-offset.frag</file>
+        <file>shaders/grayflow-offset.frag</file>
+        <file>shaders/dynamicflow-offset.frag</file>
+        <file>shaders/fuzzy-offset.frag</file>
+        <file>shaders/clouds-offset.frag</file>
+    </qresource>
+</RCC>
