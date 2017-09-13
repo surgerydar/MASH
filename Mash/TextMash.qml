@@ -18,7 +18,7 @@ Item {
         anchors.bottom: parent.bottom
         height: contentHeight + 64
         visible: false
-        font.pixelSize: 32
+        font.pointSize: 32
         color: "red"
         wrapMode: Text.WordWrap
         padding: 32
@@ -102,6 +102,7 @@ Item {
         id: fadeTimer
         interval: 500
         onTriggered: {
+            console.log('TextMash : starting fadeAnimation');
             fadeAnimation.start();
         }
     }
@@ -114,6 +115,7 @@ Item {
         }
     }
     Component.onCompleted: {
+        console.log('TextMash : starting fadeTimer');
         fadeTimer.start();
     }
     property alias text: content.text

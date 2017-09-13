@@ -77,6 +77,7 @@ Image {
         id: fadeTimer
         interval: 500
         onTriggered: {
+            console.log('ImageMash : starting fadeAnimation');
             fadeAnimation.start();
         }
     }
@@ -89,6 +90,7 @@ Image {
         }
     }
     Component.onCompleted: {
+        console.log('ImageMash : starting fadeTimer');
         fadeTimer.start();
     }
     //

@@ -20,7 +20,7 @@ void Async::performOperation(DatabaseList* database, QString operation, QVariant
     if ( operation == "find" ) {
         result = database->find(parameters);
         //
-        // TODO: explicit find latest
+        // TODO: explicit find least viewed
         //
         QVariantList matches = result.toList();
         QVariantMap candidate;
@@ -30,8 +30,19 @@ void Async::performOperation(DatabaseList* database, QString operation, QVariant
                 candidate = matchMap;
             }
         }
-        qDebug() << "Async : search : " << parameters.toMap() << " : found : "  << matches.size() << " : candidate : " << candidate;
-        emit asyncResult( operation, "OK", QVariant(candidate));
+        //qDebug() << "Async : search : " << parameters.toMap() << " : found : "  << matches.size() << " : candidate : " << candidate;
+        if ( candidate.size() > 0 ) {
+            //
+            // update view count
+            //
+            QVariantMap query({{"_id",candidate["_id"]}});
+            QVariantMap update({{"views",candidate["views"].toInt() + 1}});
+            database->update(query,update);
+            //
+            // return result
+            //
+            emit asyncResult( operation, "OK", QVariant(candidate));
+        }
     } else if( operation == "addMany" ) {
         result = database->addMany(parameters);
         database->save();

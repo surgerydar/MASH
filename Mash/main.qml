@@ -49,6 +49,7 @@ ApplicationWindow {
                 dynamicBackground.mouse.y = mouseY;
             }
         }
+
     }
 
     //
@@ -92,31 +93,11 @@ ApplicationWindow {
         //
         //
         //
-        onDataChanged: {
-            //
-            //
-            //
-        }
-        onModelReset: {
-            if ( count > 0 ) {
-                console.log( 'updating latest' );
-                var mash = get(0); // assume we are sorted by decending time
-                if ( mash.time > latest ) {
-                    latest = parseFloat(mash.time);
-                }
-            } else {
-                latest = 0.;
-            }
-        }
-        //
-        //
-        //
         function getLeastViewed( type ) {
 
             findAsync({"type":type});
             return undefined;
-            /*
-
+            /* synchronous alternative
             var results = find({"type":type});
             console.log( 'found ' + results.length + ' ' + type + 's' );
             var candidate = undefined;
@@ -149,23 +130,15 @@ ApplicationWindow {
             //
             switch( mash.type ) {
             case "text" :
+                console.log( 'creating text instance' );
                 textComponent.createObject(root,{"text":mash.content, "shader": shaders[ currentShader ].mash});
                 break;
             case "image" :
+                console.log( 'creating imagex instance' );
                 imageComponent.createObject(root,{"width": appWindow.width / 2., "height": appWindow.height / 2., "source":mash.content, "shader": shaders[ currentShader ].mash});
                 break;
             }
-            //
-            // update mash
-            //
-            mash.views++;
-            updateAsync({"_id":mash._id},{"views":mash.views});
         }
-
-        //
-        //
-        //
-        property real latest: 0 // TODO: consider storing this as javascript date
     }
     //
     //

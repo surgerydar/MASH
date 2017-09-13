@@ -51,5 +51,5 @@ void main()
     if ( offset.y > 1. ) offset.y -= 1.;
     vec4 image = texture2D( src, offset );
     vec3 finalColour = image.rgb;
-    gl_FragColor = vec4(finalColour, qt_Opacity * image.a * imageMix );
+    gl_FragColor = vec4(finalColour, image.a * imageMix ) * qt_Opacity;
 }

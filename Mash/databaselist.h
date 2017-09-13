@@ -18,6 +18,7 @@ class DatabaseList : public QAbstractListModel
     Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
     Q_PROPERTY(QStringList roles MEMBER m_roles )
     Q_PROPERTY(QVariantMap sort MEMBER m_sort )
+    Q_PROPERTY(unsigned long latest MEMBER m_latest)
     //
     //
     //
@@ -90,6 +91,7 @@ private:
     QString             m_collection;
     QStringList         m_roles;
     QVariantMap         m_sort;
+    unsigned long       m_latest;
     QList<QVariantMap>  m_objects;
     QThread             m_asyncThread;
     QMutex              m_guard;

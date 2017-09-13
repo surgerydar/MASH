@@ -8,7 +8,7 @@
 
 #include "async.h"
 
-DatabaseList::DatabaseList(QObject *parent) : QAbstractListModel(parent), m_guard(/*QMutex::Recursive*/) {
+DatabaseList::DatabaseList(QObject *parent) : QAbstractListModel(parent), m_guard(/*QMutex::Recursive*/), m_latest(0) {
     //
     // start async operation thread
     //
@@ -59,6 +59,7 @@ void DatabaseList::load() {
     //
     beginResetModel();
     m_guard.lock();
+    m_latest = 0;
     m_objects.clear();
     QString dbPath = _path();
     QFile db(dbPath);
@@ -80,6 +81,8 @@ void DatabaseList::load() {
             QVariantList objects = doc.array().toVariantList();
             //
             for ( auto& object : objects ) {
+                QVariantMap _object = object.toMap();
+                if ( _object.contains("time") && _object["time"].value<unsigned long>() > m_latest ) m_latest = _object["time"].value<unsigned long>();
                 m_objects.append(object.toMap());
             }
             //endResetModel();
@@ -136,6 +139,7 @@ void DatabaseList::clear() {
 
 QVariant DatabaseList::add(QVariant o) {
     QVariantMap object = o.toMap();
+    if ( object.contains("time") && object["time"].value<unsigned long>() > m_latest ) m_latest = object["time"].value<unsigned long>();
     if ( !object.contains("_id") ) {
         object["_id"] = QUuid::createUuid().toString();
     }
@@ -158,6 +162,10 @@ QVariant DatabaseList::addMany(QVariant entries) {
     m_guard.lock();
     for ( QVariant& entry : _entries ) {
         QVariantMap _entry = entry.toMap();
+        //
+        // update latest
+        //
+        if ( _entry.contains("time") && _entry["time"].value<unsigned long>() > m_latest ) m_latest = _entry["time"].value<unsigned long>();
         //
         // TODO: reformat on server???
         //
