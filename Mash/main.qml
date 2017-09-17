@@ -77,67 +77,60 @@ ApplicationWindow {
     //
     //
     Component.onCompleted: {
-        mashDatabase.load();
+        Database.load();
         mashTimer.start();
         imageTimer.start();
         textTimer.start();
+        webSocketChannel.open();
     }
-    //
-    //
-    //
-    DatabaseList {
-        id: mashDatabase
-        collection: "mash"
-        roles: [ "_id", "type", "content", "time", "views" ]
-        sort: {"time":-1}
-        //
-        //
-        //
-        function getLeastViewed( type ) {
+    Component.onDestruction: {
+        Database.save();
+    }
 
-            findAsync({"type":type});
-            return undefined;
-            /* synchronous alternative
-            var results = find({"type":type});
-            console.log( 'found ' + results.length + ' ' + type + 's' );
-            var candidate = undefined;
-            results.forEach( function(current) {
-                if ( !candidate || current.views < candidate.views ) {
-                    candidate = current;
+    //
+    //
+    //
+    Connections {
+        target: DatabaseConnector
+        //
+        //
+        //
+        onSuccess: {
+            console.log( 'database success : ' + operation + ' : ' + Database.Find );
+            switch(operation) {
+            case AsyncDatabase.Find ://Database.Find:
+                console.log( 'Database.Find : found ' + result.length );
+                if( result.length > 0 ) {
+                    var mash = result[ 0 ];
+                    instanciateMash(mash);
+                    Database.update({"_id":mash["_id"]},{"views":++mash.views});
                 }
-            });
-            if ( candidate ) {
-                instanciateMash( candidate );
-            }
-            */
-        }
-        onAsyncResult: {
-            if ( operation === "find" ) {
-                if ( status === "OK" ) {
-                    console.log( 'found : ' + result.content );//JSON.stringify(result)  );
-                    instanciateMash(result);
-                } else {
-                    console.log( "async error" );
-                }
-            }
-        }
-        //
-        //
-        //
-        function instanciateMash( mash ) {
-            //
-            // load mash
-            //
-            switch( mash.type ) {
-            case "text" :
-                console.log( 'creating text instance' );
-                textComponent.createObject(root,{"text":mash.content, "shader": shaders[ currentShader ].mash});
                 break;
-            case "image" :
-                console.log( 'creating imagex instance' );
-                imageComponent.createObject(root,{"width": appWindow.width / 2., "height": appWindow.height / 2., "source":mash.content, "shader": shaders[ currentShader ].mash});
+            case AsyncDatabase.Load :
+            case AsyncDatabase.Save :
                 break;
+            default:
+                //Database.save();
             }
+
+        }
+        onError: {
+            console.log('database operation : ' + operation + ' : error : ' + error );
+        }
+    }
+    function instanciateMash( mash ) {
+        //
+        // load mash
+        //
+        switch( mash.type ) {
+        case "text" :
+            console.log( 'creating text instance' );
+            textComponent.createObject(root,{"text":mash.content, "shader": shaders[ currentShader ].mash});
+            break;
+        case "image" :
+            console.log( 'creating imagex instance' );
+            imageComponent.createObject(root,{"width": appWindow.width / 2., "height": appWindow.height / 2., "source":mash.content, "shader": shaders[ currentShader ].mash});
+            break;
         }
     }
     //
@@ -155,14 +148,34 @@ ApplicationWindow {
                 // update database
                 //
                 console.log( 'WebChannel : adding ' + result.length + ' entries' );
-                mashDatabase.addManyAsync(result);
+                Database.addMany(result);
             }
         }
         //
         ///
         //
         function update() {
-            get( "mash", [ JSON.stringify(Math.round(mashDatabase.latest))] );
+            get( "mash", [ JSON.stringify(Math.round(Database.latest))] );
+        }
+    }
+    //
+    //
+    //
+    WebSocketChannel {
+        id: webSocketChannel
+        url: "http://mash.soda.co.uk"
+        autoreconnect: true
+        //
+        //
+        //
+        onOpened : {
+            console.log('WebSocketChannel : opened');
+        }
+        onClosed : {
+            console.log('WebSocketChannel : closed');
+        }
+        onReceived: {
+            console.log('WebSocketChannel : received : ' + JSON.stringify(message) );
         }
     }
     Timer {
@@ -190,7 +203,7 @@ ApplicationWindow {
         interval: 1000*9
         repeat: true
         onTriggered: {
-            mashDatabase.getLeastViewed("image");
+            Database.find({"type":"image"},{"views":1},1);
         }
     }
     //
@@ -204,7 +217,7 @@ ApplicationWindow {
         interval: 1000*16
         repeat: true
         onTriggered: {
-            mashDatabase.getLeastViewed("text");
+            Database.find({"type":"text"},{"views":1},1);
         }
     }
 

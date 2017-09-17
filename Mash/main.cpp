@@ -1,7 +1,10 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QQmlContext>
 #include "webchannel.h"
-#include "databaselist.h"
+#include "asyncdatabase.h"
+#include "databaseconnector.h"
+#include "websocketchannel.h"
 
 int main(int argc, char *argv[])
 {
@@ -15,8 +18,14 @@ int main(int argc, char *argv[])
     //
     //
     qDebug() << "Registering controls";
-    qmlRegisterType<DatabaseList>("SodaControls", 1, 0, "DatabaseList");
     qmlRegisterType<WebChannel>("SodaControls", 1, 0, "WebChannel");
+    qmlRegisterType<AsyncDatabase>("SodaControls", 1, 0, "AsyncDatabase");
+    qmlRegisterType<WebSocketChannel>("SodaControls", 1, 0, "WebSocketChannel");
+    //
+    //
+    //
+    engine.rootContext()->setContextProperty("Database", AsyncDatabase::shared());
+    engine.rootContext()->setContextProperty("DatabaseConnector", new DatabaseConnector);
     //
     //
     //

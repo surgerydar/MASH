@@ -1,12 +1,13 @@
-QT += qml quick
+QT += qml quick websockets
 
 CONFIG += c++11
 
 SOURCES += main.cpp \
     webchannel.cpp \
-    databaselist.cpp \
     systemutils.cpp \
-    async.cpp
+    asyncdatabase.cpp \
+    databaseconnector.cpp \
+    websocketchannel.cpp
 
 RESOURCES += qml.qrc
 
@@ -36,6 +37,7 @@ DISTFILES +=
 
 HEADERS += \
     webchannel.h \
-    databaselist.h \
     systemutils.h \
-    async.h
+    asyncdatabase.h \
+    databaseconnector.h \
+    websocketchannel.h
