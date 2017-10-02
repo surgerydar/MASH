@@ -8,6 +8,8 @@ uniform float time;
 uniform vec2 mouse;
 uniform vec2 resolution;
 
+uniform float qt_Opacity;
+
 varying vec2 surfacePosition;
 
 // smoke
@@ -66,5 +68,5 @@ void main( void ) {
         float x =coord.x / 12.-t + sin(coord.x*0.01+t*0.1);
         float y = pow(noiseVal + noise(vec2(1.0,0.0)+coord.xy/resolution) * noiseVal + sin(coord.y*0.0001), 0.6);
         float z = coord.y / 10.-t + cos(coord.x*0.01+t*0.1);
-        gl_FragColor = vec4( vec3( map_detailed(vec3(x, y, z))), 1.0 );
+        gl_FragColor = vec4( vec3( map_detailed(vec3(x, y, z))), 1.0 ) * qt_Opacity;
 }

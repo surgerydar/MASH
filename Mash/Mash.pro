@@ -7,7 +7,8 @@ SOURCES += main.cpp \
     systemutils.cpp \
     asyncdatabase.cpp \
     databaseconnector.cpp \
-    websocketchannel.cpp
+    websocketchannel.cpp \
+    compositeimage.cpp
 
 RESOURCES += qml.qrc
 
@@ -40,4 +41,5 @@ HEADERS += \
     systemutils.h \
     asyncdatabase.h \
     databaseconnector.h \
-    websocketchannel.h
+    websocketchannel.h \
+    compositeimage.h

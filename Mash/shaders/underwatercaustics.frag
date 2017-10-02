@@ -46,5 +46,5 @@ void main( void ) {
     vec3 colour = vec3(pow(abs(c), 8.0));
     colour = clamp(colour + vec3(0.00125, 0.00025, 0.00025), 0.0, 1.0);
 
-    gl_FragColor = vec4(colour, 1.0);
+    gl_FragColor = vec4(colour, 1.0) * qt_Opacity;
 }

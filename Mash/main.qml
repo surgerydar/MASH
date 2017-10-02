@@ -4,6 +4,7 @@ import QtQuick.Layouts 1.0
 import QtQuick.Window 2.2
 
 import SodaControls 1.0
+import "Layout.js" as Layout
 
 ApplicationWindow {
     id: appWindow
@@ -17,16 +18,24 @@ ApplicationWindow {
         //
         //
         //
+        /*
         Rectangle {
             id: background
             anchors.fill: parent
             color: "black"
+        }
+        */
+        CompositeImage {
+            id: background
+            anchors.fill: parent
         }
         //
         //
         //
         Background {
             id: dynamicBackground
+            //visible: false
+            opacity: .75
             anchors.fill: parent
         }
         //
@@ -38,6 +47,12 @@ ApplicationWindow {
             anchors.left: parent.left
             color: "white"
         }
+        Image {
+            id: cumulative
+            anchors.top: parent.top
+            anchors.left: parent.left
+        }
+
         //
         //
         //
@@ -82,6 +97,7 @@ ApplicationWindow {
         imageTimer.start();
         textTimer.start();
         webSocketChannel.open();
+        Layout.setup({x:0.,y:0.,width:appWindow.width,height:appWindow.height});
     }
     Component.onDestruction: {
         Database.save();
@@ -98,7 +114,7 @@ ApplicationWindow {
         onSuccess: {
             console.log( 'database success : ' + operation + ' : ' + Database.Find );
             switch(operation) {
-            case AsyncDatabase.Find ://Database.Find:
+            case AsyncDatabase.Find :
                 console.log( 'Database.Find : found ' + result.length );
                 if( result.length > 0 ) {
                     var mash = result[ 0 ];
@@ -122,14 +138,20 @@ ApplicationWindow {
         //
         // load mash
         //
+        var bounds = Layout.getRectangle();
+        if ( bounds === undefined ) {
+            Layout.setup({x:0.,y:0.,width:width,height:height});
+            bounds = Layout.getRectangle();
+        }
+
         switch( mash.type ) {
         case "text" :
-            console.log( 'creating text instance' );
-            textComponent.createObject(root,{"text":mash.content, "shader": shaders[ currentShader ].mash});
+            console.log( 'creating text instance at : ' + JSON.stringify(bounds) );
+            textComponent.createObject(root,{ "x":bounds.x, "y":bounds.y, "width": bounds.width, "height": bounds.height, "text":mash.content, "shader": shaders[ currentShader ].mash});
             break;
         case "image" :
-            console.log( 'creating imagex instance' );
-            imageComponent.createObject(root,{"width": appWindow.width / 2., "height": appWindow.height / 2., "source":mash.content, "shader": shaders[ currentShader ].mash});
+            console.log( 'creating image instance at : ' + JSON.stringify(bounds) );
+            imageComponent.createObject(root,{ "x":bounds.x, "y":bounds.y, "width": bounds.width, "height": bounds.height, "source":mash.content, "shader": shaders[ currentShader ].mash});
             break;
         }
     }
@@ -220,7 +242,9 @@ ApplicationWindow {
             Database.find({"type":"text"},{"views":1},1);
         }
     }
-
+    //
+    //
+    //
     function setShader( index ) {
         if ( index >= shaders.length ) index = 0;
         if ( index < 0 ) index = shaders.length - 1;
@@ -230,7 +254,9 @@ ApplicationWindow {
         // TODO: set mash shader
         //
     }
-
+    //
+    //
+    //
     Shortcut {
         sequence: "Ctrl+F"
         onActivated: {
@@ -249,15 +275,22 @@ ApplicationWindow {
             setShader( currentShader - 1 );
         }
     }
-
+    //
+    //
+    //
+    onWidthChanged: {
+        Layout.setup({x:0.,y:0.,width:width,height:height});
+    }
     //
     //
     //
     property variant shaders: [
         { background: "qrc:shaders/underwatercaustics.frag", mash: "qrc:shaders/underwatercaustics-offset.frag" },
+        /*
         { background: "qrc:shaders/lines.frag", mash: "qrc:shaders/glitch.frag" },
         { background: "qrc:shaders/balls.frag", mash: "qrc:shaders/glitch.frag" },
         { background: "qrc:shaders/hoop.frag", mash: "qrc:shaders/glitch.frag" },
+        */
         { background: "qrc:shaders/fuzzy.frag", mash: "qrc:shaders/fuzzy-offset.frag" },
         { background: "qrc:shaders/clouds.frag", mash: "qrc:shaders/clouds-offset.frag" },
         { background: "qrc:shaders/colourflow.frag", mash: "qrc:shaders/colourflow-offset.frag" },
@@ -266,4 +299,5 @@ ApplicationWindow {
     ]
     property int currentShader: 0
     property real globalTime: 0
+    property alias cumulative: background
  }

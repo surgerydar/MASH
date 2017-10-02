@@ -9,6 +9,7 @@ uniform vec2 mouse;
 uniform vec2 resolution;
 varying vec2 surfacePosition;
 varying vec2 texCoord;
+uniform float qt_Opacity;
 
 const float MATH_PI = float( 3.14159265359 );
 
@@ -122,5 +123,5 @@ void main( void )
         //   vec3 c2	= WaterFillColor;
    }
 
-    gl_FragColor = vec4( color, 1.0 );
+    gl_FragColor = vec4( color, 1.0 ) * qt_Opacity;
 }

@@ -46,5 +46,5 @@ void main( void ) {
         }
 
 
-        gl_FragColor = vec4( vec3( p*.1 ), qt_Opacity );
+        gl_FragColor = vec4( vec3( p*.1 ), 1. ) * qt_Opacity;
 }

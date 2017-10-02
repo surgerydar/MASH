@@ -5,6 +5,7 @@
 #include "asyncdatabase.h"
 #include "databaseconnector.h"
 #include "websocketchannel.h"
+#include "compositeimage.h"
 
 int main(int argc, char *argv[])
 {
@@ -21,6 +22,7 @@ int main(int argc, char *argv[])
     qmlRegisterType<WebChannel>("SodaControls", 1, 0, "WebChannel");
     qmlRegisterType<AsyncDatabase>("SodaControls", 1, 0, "AsyncDatabase");
     qmlRegisterType<WebSocketChannel>("SodaControls", 1, 0, "WebSocketChannel");
+    qmlRegisterType<CompositeImage>("SodaControls", 1, 0, "CompositeImage");
     //
     //
     //

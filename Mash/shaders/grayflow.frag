@@ -39,6 +39,6 @@ void main( void ) {
                 p.z = n(p.xy-t);p.z += n(p.yy);
         }
 
-        gl_FragColor = vec4( vec3( p.xxx*.4 * p.yyy * p.zzz * .4 ), 1.0 );
+        gl_FragColor = vec4( vec3( p.xxx*.4 * p.yyy * p.zzz * .4 ), 1.0 ) * qt_Opacity;
 
 }

@@ -27,5 +27,7 @@
         <file>shaders/dynamicflow-offset.frag</file>
         <file>shaders/fuzzy-offset.frag</file>
         <file>shaders/clouds-offset.frag</file>
+        <file>Layout.js</file>
+        <file>Mash.qml</file>
     </qresource>
 </RCC>

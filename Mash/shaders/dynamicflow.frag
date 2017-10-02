@@ -36,5 +36,5 @@ void main()
 
 
     //gl_FragColor=vec4(col/1.6, 1.0);
-    gl_FragColor=vec4(col/1.1, 1.0);
+    gl_FragColor=vec4(col/1.1, 1.0) * qt_Opacity;
 }
