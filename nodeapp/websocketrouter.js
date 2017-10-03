@@ -47,7 +47,12 @@ WebSocketRouter.prototype.message = function( wss, ws, message ) {
                 console.log( 'processing command : ' + command.command );
                 this.jsonRoutes[ command.command ]( wss, ws, command );
             } else {
-                console.log( 'WebSocketRouter.message : unable to process message ' + message  );
+                if ( command.command === 'thankyou' ) {
+                    console.log( 'processing command : ' + command.command + ' : instance : ' + command.instance );
+                    ws.instance = command.instance;
+                } else {
+                    console.log( 'WebSocketRouter.message : unable to process message ' + message  );
+                }
             }
         } else {
             //
@@ -64,6 +69,33 @@ WebSocketRouter.prototype.message = function( wss, ws, message ) {
     } catch( error ) {
         console.log( 'WebSocketRouter.message : ' + error + ' : unable to process message ' + typeof message === 'string' ? message : '' );
     }
+}
+
+WebSocketRouter.prototype.relay = function( wss, ws, command ) {
+    //
+    // relay to all other sockets
+    //
+    var message = JSON.stringify( command );
+    console.log('WebSocketRouter.relay:' + command.command);
+    wss.clients.forEach(function(client) {
+        if (client !== ws && client.readyState === WebSocket.OPEN) {
+            client.send(message);
+        }
+    });
+}
+
+WebSocketRouter.prototype.send = function( wss, instance, command ) {
+    //
+    // send to specific instance
+    //
+    var message = JSON.stringify( command );
+    console.log('WebSocketRouter.send:' + message + ' to ' + instance);
+    wss.clients.forEach(function(client) {
+        console.log( 'client.instance=' + client.instance );
+        if (client.instance === instance && client.readyState === WebSocket.OPEN) {
+            client.send(message);
+        }
+    });
 }
 
 WebSocketRouter.prototype.json = function( command, handler ) {

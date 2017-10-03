@@ -16,6 +16,7 @@ WebSocketChannel::WebSocketChannel(QObject *parent) : QObject(parent) {
 }
 
 void WebSocketChannel::open() {
+    qDebug() << "WebSocketChannel::openning connection : " << m_url;
     m_webSocket.open(m_url);
 }
 
@@ -41,6 +42,7 @@ QString WebSocketChannel::send(QVariant command) {
     QJsonDocument doc;
     doc.setObject(QJsonObject::fromVariantMap(object));
     QString message = doc.toJson();
+    qDebug() << "WebSocketChannel::sending : " << message;
     m_webSocket.sendTextMessage(message);
     //
     //

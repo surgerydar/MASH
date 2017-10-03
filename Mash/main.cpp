@@ -6,6 +6,8 @@
 #include "databaseconnector.h"
 #include "websocketchannel.h"
 #include "compositeimage.h"
+#include "guidgenerator.h"
+#include "settings.h"
 
 int main(int argc, char *argv[])
 {
@@ -28,6 +30,8 @@ int main(int argc, char *argv[])
     //
     engine.rootContext()->setContextProperty("Database", AsyncDatabase::shared());
     engine.rootContext()->setContextProperty("DatabaseConnector", new DatabaseConnector);
+    engine.rootContext()->setContextProperty("GUIDGenerator", GUIDGenerator::shared());
+    engine.rootContext()->setContextProperty("Settings", Settings::shared());
     //
     //
     //

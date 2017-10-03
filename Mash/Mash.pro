@@ -8,7 +8,9 @@ SOURCES += main.cpp \
     asyncdatabase.cpp \
     databaseconnector.cpp \
     websocketchannel.cpp \
-    compositeimage.cpp
+    compositeimage.cpp \
+    guidgenerator.cpp \
+    settings.cpp
 
 RESOURCES += qml.qrc
 
@@ -42,4 +44,6 @@ HEADERS += \
     asyncdatabase.h \
     databaseconnector.h \
     websocketchannel.h \
-    compositeimage.h
+    compositeimage.h \
+    guidgenerator.h \
+    settings.h

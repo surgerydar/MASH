@@ -1,6 +1,7 @@
 var env = process.env;
 var config = require('./config');
 var fs = require('fs');
+//var nlp = require('compromise')
 //var config = { ssl: { key: fs.readFileSync('./ssl/server.key'), cert: fs.readFileSync('./ssl/server.crt')}};
 
 //
@@ -42,11 +43,10 @@ db.connect(
         res.json({ status: 'ok' });
 	});
     //
-    // user
+    // mash
     //
     app.post('/mash', jsonParser, function (req, res) {
         // store mash
-        console.log( 'post mash : ' + JSON.stringify(req.body) );
         db.putMash( req.body ).then( function( response ) {
             res.json( {status: 'OK'} );
         } ).catch( function( error ) {
@@ -62,7 +62,20 @@ db.connect(
             res.json( formatResponse( null, 'ERROR', error ) );
         });
     });
-     //
+    //
+    // direct
+    //
+    app.post('/direct', jsonParser, function (req, res) {
+        // store mash
+        console.log( 'post direct : ' + JSON.stringify(req.body) );
+        try {
+            wsr.send(server.ws, req.body.instance, req.body.command);
+            res.json( {status: 'OK'} );
+        } catch( error ) {
+            res.json( {status: 'ERROR', message: error } );
+        }
+    });
+    //
     //
     //
     function formatResponse( data, status, message ) {

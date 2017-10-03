@@ -91,21 +91,6 @@ ApplicationWindow {
     //
     //
     //
-    Component.onCompleted: {
-        Database.load();
-        mashTimer.start();
-        imageTimer.start();
-        textTimer.start();
-        webSocketChannel.open();
-        Layout.setup({x:0.,y:0.,width:appWindow.width,height:appWindow.height});
-    }
-    Component.onDestruction: {
-        Database.save();
-    }
-
-    //
-    //
-    //
     Connections {
         target: DatabaseConnector
         //
@@ -185,7 +170,7 @@ ApplicationWindow {
     //
     WebSocketChannel {
         id: webSocketChannel
-        url: "http://mash.soda.co.uk"
+        url: "ws://mash.soda.co.uk"
         autoreconnect: true
         //
         //
@@ -197,7 +182,21 @@ ApplicationWindow {
             console.log('WebSocketChannel : closed');
         }
         onReceived: {
-            console.log('WebSocketChannel : received : ' + JSON.stringify(message) );
+            console.log('WebSocketChannel : received : ' + message );
+            var guid;
+            var command = JSON.parse(message);
+            switch( command.command ) {
+            case 'welcome' :
+                guid = send( { command: 'thankyou', instance: instance } );
+                break;
+            case 'text' :
+                instanciateMash( {type:"text", content:command.content} );
+                break;
+            case 'image' :
+                instanciateMash( {type:"image", content:command.content} );
+                break;
+            }
+
         }
     }
     Timer {
@@ -297,7 +296,36 @@ ApplicationWindow {
         { background: "qrc:shaders/grayflow.frag", mash: "qrc:shaders/grayflow-offset.frag" },
         { background: "qrc:shaders/dynamicflow.frag", mash: "qrc:shaders/dynamicflow-offset.frag" }
     ]
+    //
+    //
+    //
+    //
+    //
+    //
+    Component.onCompleted: {
+        Settings.load();
+        instance = Settings.get("instance");
+        if ( instance === "" ) {
+            instance = GUIDGenerator.generate();
+            Settings.set("instance",instance);
+            Settings.save();
+        }
+        Database.load();
+        mashTimer.start();
+        imageTimer.start();
+        textTimer.start();
+        webSocketChannel.open();
+        Layout.setup({x:0.,y:0.,width:appWindow.width,height:appWindow.height});
+    }
+    Component.onDestruction: {
+        Database.save();
+    }
+
+    //
+    //
+    //
     property int currentShader: 0
     property real globalTime: 0
     property alias cumulative: background
+    property string instance: ""
  }
