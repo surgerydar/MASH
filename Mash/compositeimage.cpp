@@ -20,17 +20,10 @@ void CompositeImage::addImage( QQuickItem *image ) {
     bounds = image->mapRectToItem(this,bounds);
     QSharedPointer<QQuickItemGrabResult> result = image->grabToImage();
     if ( result ) {
-        qDebug() << "addImage : grabbing item" << result;
-        //connect(result.data(), &QQuickItemGrabResult::ready, this, &MyClass::mySlot);
         connect(result.data(), &QQuickItemGrabResult::ready, [=]() {
-            qDebug() << "addImage : painting image : " << result->image() << " url : " << result->url();
             QPainter painter(&this->m_image);
-            //painter.setCompositionMode(QPainter::CompositionMode_ColorDodge);
+            painter.setCompositionMode(QPainter::CompositionMode_DestinationOver);
             painter.drawImage(bounds,result->image());
-            /*
-            QString path = SystemUtils::shared()->documentDirectory().append("/grabber.png");
-            result->image().save(path);
-            */
             this->update();
         } );
 
@@ -47,7 +40,7 @@ void CompositeImage::addImage( QQuickItem *image ) {
 void CompositeImage::allocateImage() {
     if ( m_image.isNull() || m_image.width() != width() || m_image.height() != height() ) {
         m_image = QImage(width(),height(),QImage::Format_ARGB32_Premultiplied);
-        m_image.fill(Qt::black);
+        m_image.fill(Qt::transparent);
     }
 }
 

@@ -1,15 +1,16 @@
 #ifdef GL_ES
 precision mediump float;
 #endif
-
-#extension GL_OES_standard_derivatives : enable
-
+/*
+  fuzzy
+  */
 uniform float time;
 uniform vec2 mouse;
 uniform vec2 resolution;
 varying vec2 surfacePosition;
 varying vec2 texCoord;
 uniform float qt_Opacity;
+uniform vec4 baseColour;
 
 const float MATH_PI = float( 3.14159265359 );
 
@@ -73,7 +74,8 @@ vec3 WaterFillColor = vec3( 0.2, 0.06, 0.28 );
 vec3 Water( vec3 rayDir )
 {
     Rotate( rayDir.xy, -0.2 );
-    vec3 color = mix( WaterKeyColor, WaterFillColor, Smooth( -1.2 * rayDir.y + 0.5 ) );
+    //vec3 color = mix( WaterKeyColor, WaterFillColor, Smooth( -1.2 * rayDir.y + 0.5 ) );
+    vec3 color = mix( baseColour.rgb, WaterFillColor, Smooth( -1.2 * rayDir.y + 0.5 ) );
     return color;
 }
 
@@ -118,9 +120,6 @@ void main( void )
     if ( t > 0.0 ) {
         vec3 pos = rayOrigin + t * rayDir;
         float specOcc = Smooth( 0.5 * length( pos - vec3( -0.1, -1.2, -0.2 ) ) );
-        //    vec3 c0	= vec3( 0.95, 0.99, 0.43 );
-        //    vec3 c1	= vec3( 0.67, 0.1, 0.05 );
-        //   vec3 c2	= WaterFillColor;
    }
 
     gl_FragColor = vec4( color, 1.0 ) * qt_Opacity;

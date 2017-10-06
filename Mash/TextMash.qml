@@ -29,5 +29,6 @@ Mash {
     //
     //
     //
+    property alias colour: content.color
     property alias text: content.text
 }

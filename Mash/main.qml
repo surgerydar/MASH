@@ -9,8 +9,8 @@ import "Layout.js" as Layout
 ApplicationWindow {
     id: appWindow
     visible: true
-    width: 640
-    height: 480
+    width: 1000
+    height: 500
     title: qsTr("MASH")
     Item {
         id: root
@@ -18,13 +18,13 @@ ApplicationWindow {
         //
         //
         //
-        /*
+
         Rectangle {
-            id: background
+            //id: background
             anchors.fill: parent
             color: "black"
         }
-        */
+
         CompositeImage {
             id: background
             anchors.fill: parent
@@ -47,12 +47,20 @@ ApplicationWindow {
             anchors.left: parent.left
             color: "white"
         }
+        /*
         Image {
             id: cumulative
+            source: "image://cached/http://2.bp.blogspot.com/-faPm9YnUMBs/UfcfajVmPgI/AAAAAAAAAEk/pZNoKICb7j0/s320/embersToAshes.png"
             anchors.top: parent.top
             anchors.left: parent.left
         }
-
+        */
+        Banner {
+            id: banner
+            anchors.left: parent.left
+            anchors.bottom: parent.bottom
+            anchors.right: parent.right
+        }
         //
         //
         //
@@ -132,7 +140,7 @@ ApplicationWindow {
         switch( mash.type ) {
         case "text" :
             console.log( 'creating text instance at : ' + JSON.stringify(bounds) );
-            textComponent.createObject(root,{ "x":bounds.x, "y":bounds.y, "width": bounds.width, "height": bounds.height, "text":mash.content, "shader": shaders[ currentShader ].mash});
+            textComponent.createObject(root,{ "x":bounds.x, "y":bounds.y, "width": bounds.width, "height": bounds.height, "text":mash.content, "colour": textColour, "shader": shaders[ currentShader ].mash});
             break;
         case "image" :
             console.log( 'creating image instance at : ' + JSON.stringify(bounds) );
@@ -185,15 +193,37 @@ ApplicationWindow {
             console.log('WebSocketChannel : received : ' + message );
             var guid;
             var command = JSON.parse(message);
-            switch( command.command ) {
+            switch( command.command.toLowerCase() ) {
             case 'welcome' :
                 guid = send( { command: 'thankyou', instance: instance } );
                 break;
             case 'text' :
-                instanciateMash( {type:"text", content:command.content} );
+                //instanciateMash( {type:"text", content:command.content} );
+                banner.setText(command.content);
                 break;
             case 'image' :
                 instanciateMash( {type:"image", content:command.content} );
+                break;
+            case 'nexteffect' :
+                setShader( currentShader + 1 );
+                break;
+            case 'previouseffect' :
+                setShader( currentShader - 1 );
+                break;
+            case 'effect' :
+                setShader( parseInt(command.number) );
+                break;
+            case 'textcolour' :
+                textColour = command.colour;
+                break;
+            case 'backgroundcolour' :
+                backgroundColour = command.colour;
+                break;
+            case 'textsource' :
+                textSource = command.source;
+                break;
+            case 'imagesource' :
+                imageSource = command.source;
                 break;
             }
 
@@ -224,7 +254,12 @@ ApplicationWindow {
         interval: 1000*9
         repeat: true
         onTriggered: {
-            Database.find({"type":"image"},{"views":1},1);
+            if ( imageSource.length > 0 ) {
+                Database.find({"type":"image","source":imageSource},{"views":1},1);
+            } else {
+                Database.find({"type":"image"},{"views":1},1);
+            }
+
         }
     }
     //
@@ -238,19 +273,24 @@ ApplicationWindow {
         interval: 1000*16
         repeat: true
         onTriggered: {
-            Database.find({"type":"text"},{"views":1},1);
+            if ( textSource.length > 0 ) {
+                Database.find({"type":"text","source":textSource},{"views":1},1);
+            } else {
+                Database.find({"type":"text"},{"views":1},1);
+            }
         }
     }
     //
     //
     //
     function setShader( index ) {
+        if ( Number.NaN === index ) return; // invalid number may come from 'direct' control
         if ( index >= shaders.length ) index = 0;
         if ( index < 0 ) index = shaders.length - 1;
         dynamicBackground.shader = shaders[ index ].background;
         currentShader = index;
         //
-        // TODO: set mash shader
+        // TODO: set live mash shader
         //
     }
     //
@@ -285,11 +325,6 @@ ApplicationWindow {
     //
     property variant shaders: [
         { background: "qrc:shaders/underwatercaustics.frag", mash: "qrc:shaders/underwatercaustics-offset.frag" },
-        /*
-        { background: "qrc:shaders/lines.frag", mash: "qrc:shaders/glitch.frag" },
-        { background: "qrc:shaders/balls.frag", mash: "qrc:shaders/glitch.frag" },
-        { background: "qrc:shaders/hoop.frag", mash: "qrc:shaders/glitch.frag" },
-        */
         { background: "qrc:shaders/fuzzy.frag", mash: "qrc:shaders/fuzzy-offset.frag" },
         { background: "qrc:shaders/clouds.frag", mash: "qrc:shaders/clouds-offset.frag" },
         { background: "qrc:shaders/colourflow.frag", mash: "qrc:shaders/colourflow-offset.frag" },
@@ -327,5 +362,9 @@ ApplicationWindow {
     property int currentShader: 0
     property real globalTime: 0
     property alias cumulative: background
+    property color textColour: "red"
+    property color backgroundColour: "white"
+    property string imageSource: ""
+    property string textSource: ""
     property string instance: ""
  }

@@ -31,6 +31,7 @@ Item {
         property variant imageMix: 0.
         property variant amplitude: appWindow.width / 16.
         property variant frequency: 60.
+        property variant baseColour: appWindow.backgroundColour
         //
         //
         //
@@ -93,7 +94,7 @@ Item {
         id: fadeTimer
         interval: 500
         onTriggered: {
-            console.log('Mash : starting fadeAnimation');
+            //console.log('Mash : starting fadeAnimation');
             fadeAnimation.start();
         }
     }
@@ -106,7 +107,7 @@ Item {
         }
     }
     Component.onCompleted: {
-        console.log('Mash : starting fadeTimer');
+        //console.log('Mash : starting fadeTimer');
         fadeTimer.start();
     }
     //

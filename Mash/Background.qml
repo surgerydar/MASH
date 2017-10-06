@@ -17,6 +17,7 @@ Item {
         property variant resolution: Qt.size(width, height)
         property variant surfaceSize: Qt.size(width, height)
         property variant mouse: Qt.point(width/2.,height/2.)
+        property variant baseColour: appWindow.backgroundColour
         //
         //
         //

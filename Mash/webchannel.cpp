@@ -8,6 +8,7 @@
 #include <QDebug>
 #include <QNetworkReply>
 #include "webchannel.h"
+#include "networkaccess.h"
 
 /*
  * example JSON response
@@ -96,6 +97,7 @@ void WebChannel::replyFinished(QNetworkReply* reply) {
     } else {
         emit error( command, message );
     }
+    reply->deleteLater();
 }
 //
 //
@@ -142,6 +144,7 @@ void WebChannel::send( const HTTPMethod method, const QString& command, const QV
     //
     // send request
     //
+    request.setOriginatingObject(this);
     switch ( method ) {
     case HTTP_GET :
         m_net->get(request);

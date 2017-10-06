@@ -7,8 +7,11 @@ precision mediump float;
 uniform float time;
 uniform vec2 mouse;
 uniform vec2 resolution;
+uniform vec4 baseColour;
 
 uniform float qt_Opacity;
+
+varying vec2 surfacePosition;
 
 uniform sampler2D src;
 varying vec2 texCoord;
@@ -65,11 +68,12 @@ float map_detailed(vec3 p) {
 }
 
 void main( void ) {
-        vec2 coord = gl_FragCoord.xy;
+        vec2 res = resolution * 4.;
+        vec2 coord = surfacePosition.xy;//gl_FragCoord.xy;
         float t = time;
-        float noiseVal = (1.0 - coord.y / resolution.y);
+        float noiseVal = (1.0 - coord.y / res.y);
         float x =coord.x / 12.-t + sin(coord.x*0.01+t*0.1);
-        float y = pow(noiseVal + noise(vec2(1.0,0.0)+coord.xy/resolution) * noiseVal + sin(coord.y*0.0001), 0.6);
+        float y = pow(noiseVal + noise(vec2(1.0,0.0)+coord.xy/res) * noiseVal + sin(coord.y*0.0001), 0.6);
         float z = coord.y / 10.-t + cos(coord.x*0.01+t*0.1);
         vec3 colour = vec3( map_detailed(vec3(x, y, z)));
         //

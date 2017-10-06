@@ -1,12 +1,14 @@
 #ifdef GL_ES
 precision mediump float;
 #endif
-
-#extension GL_OES_standard_derivatives : enable
-
+/*
+  fuzzy-offset
+  */
 uniform float time;
 uniform vec2 mouse;
 uniform vec2 resolution;
+uniform vec4 baseColour;
+
 varying vec2 surfacePosition;
 
 uniform sampler2D src;
@@ -78,7 +80,8 @@ vec3 WaterFillColor = vec3( 0.2, 0.06, 0.28 );
 vec3 Water( vec3 rayDir )
 {
     Rotate( rayDir.xy, -0.2 );
-    vec3 color = mix( WaterKeyColor, WaterFillColor, Smooth( -1.2 * rayDir.y + 0.5 ) );
+    //vec3 color = mix( WaterKeyColor, WaterFillColor, Smooth( -1.2 * rayDir.y + 0.5 ) );
+    vec3 color = mix( baseColour.rgb, WaterFillColor, Smooth( -1.2 * rayDir.y + 0.5 ) );
     return color;
 }
 

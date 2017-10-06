@@ -43,6 +43,7 @@ void AsyncDatabase::load() {
     m_documents.clear();
     QString dbPath = _path();
     QFile db(dbPath);
+    qDebug() << "DatabaseList::load : opening : " << dbPath;
     if (db.open(QIODevice::ReadOnly)) {
         //
         // read file
@@ -76,20 +77,29 @@ void AsyncDatabase::load() {
         //
         // create default db
         //
-        save();
+        qDebug() << "DatabaseList::load : no database at : " << dbPath << " : creating default";
+        //save();
+        if (db.open(QIODevice::WriteOnly)) {
+            QJsonDocument doc;
+            doc.setArray(QJsonArray());
+            db.write(doc.toJson());
+        }
     }
     emit success(Load,QVariant());
-    emit error(Load,"just testing");
 }
 
 void AsyncDatabase::save() {
     QMutexLocker locker(&m_guard);
     QString dbPath = _path();
     QFile db(dbPath);
+    qDebug() << "DatabaseList::save : opening : " << dbPath;
     if (db.open(QIODevice::WriteOnly)) {
+        qDebug() << "DatabaseList::save : writing documents";
         QJsonArray array;
-        for ( auto& object : m_documents ) {
-            array.append(QJsonValue::fromVariant(QVariant(object)));
+        if ( m_documents.size() > 0 ) {
+            for ( auto& object : m_documents ) {
+                array.append(QJsonValue::fromVariant(QVariant(object)));
+            }
         }
         QJsonDocument doc;
         doc.setArray(array);
@@ -147,9 +157,15 @@ void AsyncDatabase::addMany(QVariant documents) {
             QVariantMap _mash = _document["mash"].toMap();
             mash["type"] = _mash["type"];
             mash["content"] = _mash["content"];
+            if ( _mash.contains("source") ) {
+                mash["source"] = _mash["source"];
+            }
         } else {
             mash["type"] = _document["type"];
             mash["content"] = _document["content"];
+            if ( _document.contains("source") ) {
+                mash["source"] = _document["source"];
+            }
         }
         m_documents.append(mash);
         matches.append(QVariantMap({{"_id",mash["_id"]}}));

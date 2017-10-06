@@ -29,5 +29,6 @@
         <file>shaders/clouds-offset.frag</file>
         <file>Layout.js</file>
         <file>Mash.qml</file>
+        <file>Banner.qml</file>
     </qresource>
 </RCC>

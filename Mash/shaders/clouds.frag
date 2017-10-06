@@ -7,6 +7,7 @@ precision mediump float;
 uniform float time;
 uniform vec2 mouse;
 uniform vec2 resolution;
+uniform vec4 baseColour;
 
 uniform float qt_Opacity;
 
@@ -21,18 +22,18 @@ float SEA_TIME = 21.;
 mat2 octave_m = mat2(1.6,1.2,-1.2,1.6);
 
 float hash( vec2 p ) {
-        float h = dot(p,vec2(127.1,311.7));
+    float h = dot(p,vec2(127.1,311.7));
     return fract(sin(h)*43758.5453123);
 }
 
 float noise( in vec2 p ) {
     vec2 i = floor( p );
     vec2 f = fract( p );
-        vec2 u = f*f*(3.0-2.0*f);
+    vec2 u = f*f*(3.0-2.0*f);
     return -1.0+2.0*mix( mix( hash( i + vec2(0.0,0.0) ),
-                     hash( i + vec2(1.0,0.0) ), u.x),
-                mix( hash( i + vec2(0.0,1.0) ),
-                     hash( i + vec2(1.0,1.0) ), u.x), u.y);
+                              hash( i + vec2(1.0,0.0) ), u.x),
+                         mix( hash( i + vec2(0.0,1.0) ),
+                              hash( i + vec2(1.0,1.0) ), u.x), u.y);
 }
 
 float sea_octave(vec2 uv, float choppy) {
@@ -61,12 +62,14 @@ float map_detailed(vec3 p) {
 }
 
 void main( void ) {
-
-        vec2 coord = gl_FragCoord.xy;
-        float t = time;
-        float noiseVal = (1.0 - coord.y / resolution.y);
-        float x =coord.x / 12.-t + sin(coord.x*0.01+t*0.1);
-        float y = pow(noiseVal + noise(vec2(1.0,0.0)+coord.xy/resolution) * noiseVal + sin(coord.y*0.0001), 0.6);
-        float z = coord.y / 10.-t + cos(coord.x*0.01+t*0.1);
-        gl_FragColor = vec4( vec3( map_detailed(vec3(x, y, z))), 1.0 ) * qt_Opacity;
+    vec2 res = resolution * 4.;
+    vec2 coord = surfacePosition.xy;//gl_FragCoord.xy;
+    float t = time;
+    float noiseVal = (1.0 - coord.y / res.y);
+    float x =coord.x / 12.-t + sin(coord.x*0.01+t*0.1);
+    float y = pow(noiseVal + noise(vec2(1.0,0.0)+coord.xy/res) * noiseVal + sin(coord.y*0.0001), 0.6);
+    float z = coord.y / 10.-t + cos(coord.x*0.01+t*0.1);
+    float intensity = map_detailed(vec3(x, y, z));
+    //gl_FragColor = vec4( vec3( intensity ), 1.0 ) * qt_Opacity;
+    gl_FragColor = ( baseColour * intensity ) * qt_Opacity;
 }

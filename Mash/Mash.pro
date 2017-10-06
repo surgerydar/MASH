@@ -10,7 +10,9 @@ SOURCES += main.cpp \
     websocketchannel.cpp \
     compositeimage.cpp \
     guidgenerator.cpp \
-    settings.cpp
+    settings.cpp \
+    cachedimageprovider.cpp \
+    networkaccess.cpp
 
 RESOURCES += qml.qrc
 
@@ -46,4 +48,6 @@ HEADERS += \
     websocketchannel.h \
     compositeimage.h \
     guidgenerator.h \
-    settings.h
+    settings.h \
+    cachedimageprovider.h \
+    networkaccess.h

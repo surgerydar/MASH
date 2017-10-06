@@ -5,6 +5,7 @@ precision mediump float;
 uniform float time;
 uniform vec2 mouse;
 uniform vec2 resolution;
+uniform vec4 baseColour;
 
 uniform float qt_Opacity;
 
@@ -44,7 +45,8 @@ void main( void ) {
     c /= float(MAX_ITER);
     c = 1.17-pow(c, 1.4);
     vec3 colour = vec3(pow(abs(c), 8.0));
-    colour = clamp(colour + vec3(0.00125, 0.00025, 0.00025), 0.0, 1.0);
+    //colour = clamp(colour + vec3(0.00125, 0.00025, 0.00025), 0.0, 1.0);
+    colour = clamp(colour * baseColour.rgb, 0.0, 1.0);
 
     gl_FragColor = vec4(colour, 1.0) * qt_Opacity;
 }

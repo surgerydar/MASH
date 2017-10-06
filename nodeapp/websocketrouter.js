@@ -50,6 +50,12 @@ WebSocketRouter.prototype.message = function( wss, ws, message ) {
                 if ( command.command === 'thankyou' ) {
                     console.log( 'processing command : ' + command.command + ' : instance : ' + command.instance );
                     ws.instance = command.instance;
+                    let response = {
+                        command: 'configuration'
+                    };
+                    ws.send(JSON.stringify(response));
+                } else if ( command.command === 'configuration' ) {
+                    ws.configuration = command.configuration;
                 } else {
                     console.log( 'WebSocketRouter.message : unable to process message ' + message  );
                 }
@@ -96,6 +102,19 @@ WebSocketRouter.prototype.send = function( wss, instance, command ) {
             client.send(message);
         }
     });
+}
+
+WebSocketRouter.prototype.getInstances = function( wss ) {
+    var instances = [];
+    wss.clients.forEach(function(client) {
+        if (client.readyState === WebSocket.OPEN) {
+            instances.push( {
+                instance: client.instance,
+                configuration: client.configuration
+            });
+        }
+    });
+    return instances;
 }
 
 WebSocketRouter.prototype.json = function( command, handler ) {
