@@ -40,18 +40,30 @@ Db.prototype.connect = function( host, port, database, username, password ) {
 Db.prototype.putMash = function( data ) {
     var db = this.db;
     return new Promise( function( resolve, reject ) {
-        try {
-            data.time = Date.now();
-            db.collection( 'mash' ).insertOne(data,function(err,result) {
-               if ( err ) {
-                   reject( err );
-               } else {
-                   resolve( 'stored' );
-               }
-            });
-        } catch( err ) {
-            console.log( err );
-            reject( err );
+        if (    data.mash === undefined || 
+                data.mash.type === undefined || 
+                data.mash.content === undefined || 
+                data.mash.content.length() === 0 ||  
+                data.mash.type.length() === 0 || 
+                !( data.mash.type === "text" || data.mash.type === "image" ) ) {
+            reject('invalid mash')
+        } else {
+            try {
+                data.time = Date.now();
+                if ( data.content ) {
+                    data.content = data.content.trim(); // trim whitespace
+                }
+                db.collection( 'mash' ).insertOne(data,function(err,result) {
+                   if ( err ) {
+                       reject( err );
+                   } else {
+                       resolve( 'stored' );
+                   }
+                });
+            } catch( err ) {
+                console.log( err );
+                reject( err );
+            }
         }
     });
 
@@ -104,6 +116,23 @@ Db.prototype.update = function( collection, query, update, options ) {
 	return new Promise( function( resolve, reject ) {
 		try {
 			db.collection( collection ).update( query, projection, options, function(err,result) {
+				if ( err ) {
+					reject( err );
+				} else {
+					resolve( result );
+				}
+			});
+		} catch( err ) {
+			reject( err );
+		}
+	});
+}
+
+Db.prototype.remove = function( collection, query, update, options ) {
+	var db = this.db;
+	return new Promise( function( resolve, reject ) {
+		try {
+			db.collection( collection ).remove( query, function(err,result) {
 				if ( err ) {
 					reject( err );
 				} else {

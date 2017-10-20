@@ -1,6 +1,7 @@
 var env = process.env;
 var config = require('./config');
 var fs = require('fs');
+var request = require('request');
 //var nlp = require('compromise')
 //var config = { ssl: { key: fs.readFileSync('./ssl/server.key'), cert: fs.readFileSync('./ssl/server.crt')}};
 
@@ -53,6 +54,14 @@ db.connect(
             res.json( {status: 'ERROR', message: error } );
         });
     });
+    app.post('/unmash', jsonParser, function (req, res) {
+        // remove mash
+        db.remove( req.body ).then( function( response ) {
+            res.json( {status: 'OK'} );
+        } ).catch( function( error ) {
+            res.json( {status: 'ERROR', message: error } );
+        });
+    });
     app.get('/mash/:time', function(req, res) {
         // all mashes later than time
         console.log( 'get mash after : ' + req.params.time );
@@ -61,6 +70,10 @@ db.connect(
         }).catch( function( error ) {
             res.json( formatResponse( null, 'ERROR', error ) );
         });
+    });
+    app.get('/s/:id/:image', function(req, res) {
+        let redirUrl = 'https://dl.dropboxusercontent.com:443/s/' + req.params.id + '/' + req.params.image;
+        request(redirUrl).pipe(res);
     });
     //
     // direct

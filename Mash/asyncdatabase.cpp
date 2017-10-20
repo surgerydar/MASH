@@ -150,23 +150,7 @@ void AsyncDatabase::addMany(QVariant documents) {
         // TODO: reformat on server???
         //
         QVariantMap mash;
-        mash["_id"] = _document.contains("_id") ? _document["_id"] : QUuid::createUuid().toString();
-        mash["time"] = _document[ "time" ];
-        mash["views"] = _document.contains("views") ? _document["views"] : 0;
-        if ( _document.contains("mash") ) {
-            QVariantMap _mash = _document["mash"].toMap();
-            mash["type"] = _mash["type"];
-            mash["content"] = _mash["content"];
-            if ( _mash.contains("source") ) {
-                mash["source"] = _mash["source"];
-            }
-        } else {
-            mash["type"] = _document["type"];
-            mash["content"] = _document["content"];
-            if ( _document.contains("source") ) {
-                mash["source"] = _document["source"];
-            }
-        }
+        convertDocumentToMash( _document, mash );
         m_documents.append(mash);
         matches.append(QVariantMap({{"_id",mash["_id"]}}));
     }
@@ -263,9 +247,68 @@ void AsyncDatabase::sort(QVariant s) {
         _sort();
     }
 }
+
+void AsyncDatabase::sync(QVariant documents) {
+    QMutexLocker locker(&m_guard);
+    QVariantList _documents = documents.toList();
+    //
+    // merge old and new
+    //
+    QList<QVariantMap>  m_new_documents;
+    int count = _documents.size();
+    for ( int i = 0; i < count; i++ ) {
+        QVariantMap new_document = _documents[ i ].toMap();
+        QVariantMap query = QVariantMap({{"_id",new_document["_id"]}});
+        QVariantMap old_document = _findOne(query);
+        if ( !old_document.isEmpty() ) {
+            new_document[ "views" ] =  old_document["views"];
+        } else {
+            new_document[ "views" ] = 0;
+        }
+        QVariantMap mash;
+        convertDocumentToMash( new_document, mash );
+        m_new_documents.push_back(mash);
+    }
+    //
+    // swap lists
+    //
+    m_documents = m_new_documents;
+    _sort();
+    emit success(Sync,QVariant());
+}
+
+void AsyncDatabase::convertDocumentToMash( QVariantMap& document, QVariantMap& mash ) {
+    mash["_id"] = document.contains("_id") ? document["_id"] : QUuid::createUuid().toString();
+    mash["time"] = document[ "time" ];
+    mash["views"] = document.contains("views") ? document["views"] : 0;
+    if ( document.contains("mash") ) {
+        QVariantMap _mash = document["mash"].toMap();
+        mash["type"] = _mash["type"];
+        mash["content"] = _mash["content"];
+        if ( _mash.contains("source") ) {
+            mash["source"] = _mash["source"];
+        }
+    } else {
+        mash["type"] = document["type"];
+        mash["content"] = document["content"];
+        if ( document.contains("source") ) {
+            mash["source"] = document["source"];
+        }
+    }
+}
 //
+// non blocking
 //
-//
+QVariantMap AsyncDatabase::_findOne(QVariantMap query) {
+    int count = m_documents.size();
+    for ( int i = 0; i < count; i++ ) {
+        if ( _match(m_documents[i],query) ) {
+            return m_documents[ i];
+        }
+    }
+    return QVariantMap();
+}
+
 void AsyncDatabase::_sort() {
     if ( !m_sort.empty() ) {
         __sort(m_documents,m_sort);

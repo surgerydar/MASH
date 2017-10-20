@@ -18,7 +18,7 @@ public:
     //
     //
     //
-    enum Operation { Load, Save, Clear, Add, AddMany, Update, Remove, Find, FindOne, Get, Sort };
+    enum Operation { Load, Save, Clear, Add, AddMany, Update, Remove, Find, FindOne, Get, Sort, Sync };
     Q_ENUM(Operation)
     //
     //
@@ -56,6 +56,7 @@ public slots:
     void findOne(QVariant query);
     void get(int i);
     void sort(QVariant order);
+    void sync(QVariant documents);
     //
     //
     //
@@ -74,6 +75,8 @@ private:
     //
     //
     //
+    void convertDocumentToMash( QVariantMap& document, QVariantMap& mash );
+    QVariantMap _findOne(QVariantMap query);
     void _sort();
     void __sort(QList<QVariantMap>& list,QVariantMap& s);
     bool _match( QVariantMap& object, QVariantMap& query );

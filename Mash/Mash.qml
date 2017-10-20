@@ -5,6 +5,7 @@ Item {
     //
     //
     //
+
     ShaderEffectSource {
         id: source
         visible: false
@@ -32,17 +33,6 @@ Item {
         property variant amplitude: appWindow.width / 16.
         property variant frequency: 60.
         property variant baseColour: appWindow.backgroundColour
-        //
-        //
-        //
-        /*
-        NumberAnimation on imageMix {
-            from: 0.
-            to: 1.
-            duration: 1000 * 10
-            easing.type: Easing.InOutQuad
-        }
-        */
     }
     //
     //

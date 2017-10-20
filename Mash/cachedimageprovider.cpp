@@ -19,50 +19,70 @@ class CachedImageResponse : public QQuickImageResponse, public QRunnable
             m_id(id),
             m_requestedSize(requestedSize) {
             setAutoDelete(false);
-            m_net = new QNetworkAccessManager(this);
-            connect(m_net, &QNetworkAccessManager::finished, this, &CachedImageResponse::replyFinished);
         }
 
         QQuickTextureFactory *textureFactory() const {
             return QQuickTextureFactory::textureFactoryForImage(m_image);
         }
-
+        //
+        //
+        //
         void run() {
             //
             // check for image in local cache
             //
             QString localPath = CachedImageProvider::cacheLocation(m_id);
             if ( localPath.length() > 0 ) {
-                m_image.load(localPath);
-                if ( !m_image.isNull() ) {
-                    finish();
-                    return;
+                QFile file(localPath);
+                if(file.open(QFile::ReadOnly)) {
+                    qDebug() << "CachedImageResponse : loading cached image data : " << localPath;
+                    QByteArray buffer;
+                    while (!file.atEnd()) {
+                        QByteArray chunk = file.read(512);
+                        if ( chunk.size() > 0 ) {
+                            buffer.append(chunk);
+                            QThread::yieldCurrentThread();
+                        }
+                    }
+                    qDebug() << "CachedImageResponse : cached image data loaded";
+                    m_image.loadFromData(buffer);
+                    qDebug() << "CachedImageResponse : cached image loaded from data";
+                    if ( !m_image.isNull() ) {
+                        finish();
+                        return;
+                    } else {
+                        qDebug() << "CachedImageResponse : error loading cached image : " << localPath;
+                    }
+                } else {
+                    qDebug() << "CachedImageResponse : error loading cached image : " << localPath;
                 }
+
             }
+            //
+            //
+            //
+            qDebug() << "CachedImageResponse : loading image from network : " << m_id;
+            QNetworkAccessManager net;
+            QEventLoop loop;
+            connect(&net, &QNetworkAccessManager::finished, [this,&loop]( QNetworkReply* reply ) {
+                this->replyFinished(reply);
+                loop.quit();
+            });
             //
             // load image from network
             //
-            qDebug() << "CachedImageResponse : loading image : " << m_id;
             QUrl url = QUrl(m_id);
             QNetworkRequest request(url);
             request.setHeader(QNetworkRequest::UserAgentHeader, "MASH v0.3");
-            m_net->get(request);
-            //while( m_image.isNull() ) QThread::sleep(1);
-            /*
-            QNetworkReply* reply = NetworkAccess::shared()->net()->get(request);
-            QImageReader reader(reply);
-            m_image = reader.read();
-            if ( m_image.isNull() ) {
-                m_image = QImage(50, 50, QImage::Format_RGB32);
-                m_image.fill(Qt::red);
-            }
-            finish();
-            */
+            net.get(request);
+            loop.exec();
         }
 
         void finish() {
             if (m_requestedSize.isValid()) {
-                m_image = m_image.scaled(m_requestedSize);
+                qDebug() << "CachedImageResponse : resizing image";
+                m_image = m_image.scaled(m_requestedSize, Qt::KeepAspectRatio);
+                qDebug() << "CachedImageResponse : image resized";
             }
             emit finished();
         }
@@ -71,23 +91,32 @@ private slots:
         void replyFinished(QNetworkReply* reply) {
             qDebug() << "CachedImageResponse : reply : " << reply->request().url();
             if ( reply->error() == QNetworkReply::NoError ) {
-                //QImageReader reader(reply);
-                //m_image = reader.read();
-                if ( m_image.isNull() ) {
-                    m_image = QImage(50, 50, QImage::Format_RGB32);
-                    m_image.fill(Qt::red);
+                QByteArray data = reply->readAll();
+                m_image.loadFromData(data);
+                if ( !m_image.isNull() ) {
+                    QString filename = QDateTime::currentDateTime().toString("yyyy-MM-dd-HH-mm-ss-zzz.png");
+                    QString filepath = CachedImageProvider::cachePath().append("/").append(filename);
+                    m_image.save(filepath);
+                    CachedImageProvider::addCacheLocation(m_id,filename);
+                    finish();
+                } else {
+                   m_errorString = "Invalid image format";
                 }
-                finish();
             } else {
-                qDebug() << "CachedImageResponse error : " << reply->errorString();
+                m_errorString = reply->errorString();
+                //
+                // TODO: handle content errors - possibly remove from database if gone type error
+                //
+                qDebug() << "CachedImageResponse error : " << reply->error() << " : " << reply->errorString();
             }
+            reply->deleteLater();
         }
 
 private:
         QString m_id;
-        QSize m_requestedSize;
-        QImage m_image;
-        QNetworkAccessManager* m_net;
+        QSize   m_requestedSize;
+        QImage  m_image;
+        QString m_errorString;
 };
 
 QVariantMap CachedImageProvider::s_cache;
@@ -98,17 +127,26 @@ CachedImageProvider::CachedImageProvider() : QQuickAsyncImageProvider() {
         QDir cacheDirectory( cachePath() );
         if ( !cacheDirectory.exists() ) {
             cacheDirectory.cdUp();
-            cacheDirectory.mkdir(cacheDirectoryName);
-        } else if ( !cacheDirectory.exists("cache.json") ) {
+            if ( !cacheDirectory.mkdir(cacheDirectoryName) ) {
+                qDebug() << "CachedImageProvider : error : unable to create cache directory : " << cachePath();
+            }
+        } else {
             load();
         }
     }
+}
+
+void CachedImageProvider::addCacheLocation(QString&id,QString&location) {
+    s_cache[ id ] = QVariant::fromValue(location);
+    save();
 }
 
 QString CachedImageProvider::cacheLocation(QString&id) {
     QString location;
     if( s_cache.contains(id) ) {
         location = cachePath().append("/").append(s_cache[id].toString());
+    } else {
+        qDebug() << "CachedImageProvider : image not cached : " << id;
     }
     return location;
 }
@@ -132,15 +170,19 @@ void CachedImageProvider::load() {
         //
         // interpret
         //
-        if ( document.isObject() ){
-            s_cache = document.toVariant().toMap();
+        if ( document.isObject() ) {
+            s_cache = document.object().toVariantMap();
+            qDebug() << "CachedImageProvider : loaded";
+            for ( auto& key : s_cache ) {
+                qDebug() << key;
+            }
         } else {
-            QString error = "error parsing : ";
+            QString error = "CachedImageProvider : error parsing : ";
             error.append( parseError.errorString() );
             qDebug() << error;
         }
     } else {
-        QString error = "Unable to open file : ";
+        QString error = "CachedImageProvider : Unable to open file : ";
         error.append(cachePath().append("/cache.json"));
         qDebug() << error;
     }

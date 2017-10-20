@@ -9,7 +9,8 @@ Mash {
     Image {
         id: content
         anchors.fill: parent
-        fillMode: Image.PreserveAspectCrop
+        fillMode: Image.PreserveAspectFit
+        sourceSize: Qt.size(width,height)
         //
         //
         //

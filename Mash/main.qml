@@ -37,6 +37,7 @@ ApplicationWindow {
             //visible: false
             opacity: .75
             anchors.fill: parent
+            shader: shaders[ currentShader ].background
         }
         //
         //
@@ -55,6 +56,13 @@ ApplicationWindow {
             anchors.left: parent.left
         }
         */
+        Item {
+            id: mashContainer
+            anchors.fill: parent
+        }
+        //
+        //
+        //
         Banner {
             id: banner
             anchors.left: parent.left
@@ -137,15 +145,21 @@ ApplicationWindow {
             bounds = Layout.getRectangle();
         }
 
-        switch( mash.type ) {
-        case "text" :
-            console.log( 'creating text instance at : ' + JSON.stringify(bounds) );
-            textComponent.createObject(root,{ "x":bounds.x, "y":bounds.y, "width": bounds.width, "height": bounds.height, "text":mash.content, "colour": textColour, "shader": shaders[ currentShader ].mash});
-            break;
-        case "image" :
-            console.log( 'creating image instance at : ' + JSON.stringify(bounds) );
-            imageComponent.createObject(root,{ "x":bounds.x, "y":bounds.y, "width": bounds.width, "height": bounds.height, "source":mash.content, "shader": shaders[ currentShader ].mash});
-            break;
+        if ( mash.content && mash.content.length > 0 ) {
+            mash.content = mash.content.trim();
+
+            switch( mash.type ) {
+            case "text" :
+                console.log( 'creating text instance at : ' + JSON.stringify(bounds) );
+                textComponent.createObject(mashContainer,{ "x":bounds.x, "y":bounds.y, "width": bounds.width, "height": bounds.height, "text":mash.content, "colour": textColour, "shader": shaders[ currentShader ].mash});
+                break;
+            case "image" :
+                console.log( 'creating image instance at : ' + JSON.stringify(bounds) );
+                mash.content = mash.content.replace('https://dl.dropboxusercontent.com:443','http://mash.soda.co.uk');
+                //imageComponent.createObject(root,{ "x":bounds.x, "y":bounds.y, "width": bounds.width, "height": bounds.height, "source":mash.content, "shader": shaders[ currentShader ].mash});
+                imageComponent.createObject(mashContainer,{ "x":bounds.x, "y":bounds.y, "width": bounds.width, "height": bounds.height, "source":"image://cached/" + mash.content.trim(), "shader": shaders[ currentShader ].mash});
+                break;
+            }
         }
     }
     //
@@ -163,14 +177,16 @@ ApplicationWindow {
                 // update database
                 //
                 console.log( 'WebChannel : adding ' + result.length + ' entries' );
-                Database.addMany(result);
+                //Database.addMany(result);
+                Database.sync(result);
             }
         }
         //
-        ///
+        //
         //
         function update() {
-            get( "mash", [ JSON.stringify(Math.round(Database.latest))] );
+            //get( "mash", [ JSON.stringify(Math.round(Database.latest))] );
+            get( "mash", [ "0" ] );
         }
     }
     //
@@ -254,11 +270,15 @@ ApplicationWindow {
         interval: 1000*9
         repeat: true
         onTriggered: {
+            var query;
             if ( imageSource.length > 0 ) {
-                Database.find({"type":"image","source":imageSource},{"views":1},1);
+                query = {"type":"image","source":imageSource};
+                Database.find(query,{"views":1},1);
             } else {
+                query = {"type":"image"};
                 Database.find({"type":"image"},{"views":1},1);
             }
+            console.log( 'query' + JSON.stringify(query) );
 
         }
     }
@@ -292,6 +312,12 @@ ApplicationWindow {
         //
         // TODO: set live mash shader
         //
+        for ( var i = 0; i < mashContainer.children.length; ++i ) {
+            var child = mashContainer.children[i];
+            if ( child.shader !== undefined ) {
+                child.shader = shaders[ index ].mash;
+            }
+        }
     }
     //
     //
@@ -359,7 +385,7 @@ ApplicationWindow {
     //
     //
     //
-    property int currentShader: 0
+    property int currentShader: 4
     property real globalTime: 0
     property alias cumulative: background
     property color textColour: "red"

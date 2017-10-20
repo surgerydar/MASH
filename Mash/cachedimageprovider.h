@@ -4,6 +4,7 @@
 #include <QQuickAsyncImageProvider>
 #include <QVariantMap>
 #include <QThreadPool>
+#include <QNetworkAccessManager>
 
 class CachedImageProvider : public QQuickAsyncImageProvider
 {
@@ -14,6 +15,7 @@ public:
     //
     //
     static QString cacheLocation(QString&id);
+    static void addCacheLocation(QString&id,QString&location);
     static QString cachePath();
 private:
     static void load();
