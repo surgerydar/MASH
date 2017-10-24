@@ -104,6 +104,19 @@ WebSocketRouter.prototype.send = function( wss, instance, command ) {
     });
 }
 
+WebSocketRouter.prototype.getInstance = function( wss, instance ) {
+    var instances = [];
+    wss.clients.forEach(function(client) {
+        if (client.readyState === WebSocket.OPEN && client.instance === instance ) {
+            return {
+                instance: client.instance,
+                configuration: client.configuration
+            };
+        }
+    });
+    return undefined;
+}
+
 WebSocketRouter.prototype.getInstances = function( wss ) {
     var instances = [];
     wss.clients.forEach(function(client) {

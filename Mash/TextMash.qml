@@ -2,6 +2,7 @@ import QtQuick 2.8
 
 Mash {
     id: container
+    z: 2
     //
     //
     //
@@ -24,6 +25,7 @@ Mash {
         //
         Component.onCompleted: {
             container.sourceItem = content;
+            fadeAnimation.start();
         }
     }
     //
@@ -31,4 +33,6 @@ Mash {
     //
     property alias colour: content.color
     property alias text: content.text
+    property alias hAlign: content.horizontalAlignment
+    property alias vAlign: content.verticalAlignment
 }

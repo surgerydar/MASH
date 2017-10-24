@@ -40,12 +40,12 @@ Db.prototype.connect = function( host, port, database, username, password ) {
 Db.prototype.putMash = function( data ) {
     var db = this.db;
     return new Promise( function( resolve, reject ) {
-        if (    data.mash === undefined || 
+        if ( false ) {/*data.mash === undefined || 
                 data.mash.type === undefined || 
                 data.mash.content === undefined || 
                 data.mash.content.length() === 0 ||  
                 data.mash.type.length() === 0 || 
-                !( data.mash.type === "text" || data.mash.type === "image" ) ) {
+                !( data.mash.type === "text" || data.mash.type === "image" ) ) {*/
             reject('invalid mash')
         } else {
             try {
@@ -98,7 +98,24 @@ Db.prototype.find = function( collection, query, projection ) {
 	var db = this.db;
 	return new Promise( function( resolve, reject ) {
 		try {
-			db.collection( collection ).find( query, projection, function(err,result) {
+			db.collection( collection ).find( query, projection ).toArray( function(err,result) {
+				if ( err ) {
+					reject( err );
+				} else {
+					resolve( result );
+				}
+			});
+		} catch( err ) {
+			reject( err );
+		}
+	});
+}
+Db.prototype.findOne = function( collection, query, projection ) {
+	var db = this.db;
+	return new Promise( function( resolve, reject ) {
+		try {
+            console.log( 'find : ' + collection + ' : ' + JSON.stringify(query) );
+			db.collection( collection ).findOne( query, projection, function(err,result) {
 				if ( err ) {
 					reject( err );
 				} else {
@@ -162,6 +179,9 @@ Db.prototype.drop = function( collection ) {
 	});
 }
 
+Db.prototype.ObjectId = function( hex ) {
+    return new ObjectId.createFromHexString(hex);
+}
 
 module.exports = new Db();
 

@@ -30,5 +30,6 @@
         <file>Layout.js</file>
         <file>Mash.qml</file>
         <file>Banner.qml</file>
+        <file>utils.js</file>
     </qresource>
 </RCC>

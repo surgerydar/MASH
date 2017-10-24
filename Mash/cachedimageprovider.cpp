@@ -35,7 +35,7 @@ class CachedImageResponse : public QQuickImageResponse, public QRunnable
             if ( localPath.length() > 0 ) {
                 QFile file(localPath);
                 if(file.open(QFile::ReadOnly)) {
-                    qDebug() << "CachedImageResponse : loading cached image data : " << localPath;
+                    //qDebug() << "CachedImageResponse : loading cached image data : " << localPath;
                     QByteArray buffer;
                     while (!file.atEnd()) {
                         QByteArray chunk = file.read(512);
@@ -44,9 +44,9 @@ class CachedImageResponse : public QQuickImageResponse, public QRunnable
                             QThread::yieldCurrentThread();
                         }
                     }
-                    qDebug() << "CachedImageResponse : cached image data loaded";
+                    //qDebug() << "CachedImageResponse : cached image data loaded";
                     m_image.loadFromData(buffer);
-                    qDebug() << "CachedImageResponse : cached image loaded from data";
+                    //qDebug() << "CachedImageResponse : cached image loaded from data";
                     if ( !m_image.isNull() ) {
                         finish();
                         return;
@@ -61,7 +61,7 @@ class CachedImageResponse : public QQuickImageResponse, public QRunnable
             //
             //
             //
-            qDebug() << "CachedImageResponse : loading image from network : " << m_id;
+            //qDebug() << "CachedImageResponse : loading image from network : " << m_id;
             QNetworkAccessManager net;
             QEventLoop loop;
             connect(&net, &QNetworkAccessManager::finished, [this,&loop]( QNetworkReply* reply ) {
@@ -80,9 +80,9 @@ class CachedImageResponse : public QQuickImageResponse, public QRunnable
 
         void finish() {
             if (m_requestedSize.isValid()) {
-                qDebug() << "CachedImageResponse : resizing image";
+                //qDebug() << "CachedImageResponse : resizing image";
                 m_image = m_image.scaled(m_requestedSize, Qt::KeepAspectRatio);
-                qDebug() << "CachedImageResponse : image resized";
+                //qDebug() << "CachedImageResponse : image resized";
             }
             emit finished();
         }

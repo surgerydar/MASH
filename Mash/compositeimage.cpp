@@ -22,6 +22,7 @@ void CompositeImage::addImage( QQuickItem *image ) {
     if ( result ) {
         connect(result.data(), &QQuickItemGrabResult::ready, [=]() {
             QPainter painter(&this->m_image);
+            painter.setOpacity(.5);
             painter.setCompositionMode(QPainter::CompositionMode_DestinationOver);
             painter.drawImage(bounds,result->image());
             this->update();

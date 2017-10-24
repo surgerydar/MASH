@@ -1,0 +1,26 @@
+html
+    head
+        title= title
+        link(rel='stylesheet', href='styles/mash.css')
+        meta( name='viewport' content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0' )
+    body
+        #container
+            h1( style='text-align: center' ) MASH - Admin
+            h2( style='text-align: center' ) Instance
+            input#device-guid(type='text', name='guid' placeholder='display id',required, autofocus)
+            #device-details
+            h2( style='text-align: center' ) Images
+            .gallery#images
+                each image in images
+                    if image
+                        .thumbnail
+                            - var url = image.mash.content.trim().replace('https://dl.dropboxusercontent.com:443','http://mash.soda.co.uk') + '?width=128&height=128';
+                            img( src= url )
+                            .delete( data-id= image._id )
+            h2( style='text-align: center' ) Text
+            .gallery#texts
+                each text in texts
+                    if text
+                        .thumbnail= text.mash.content
+                            .delete( data-id= text._id )
+        script(src='/scripts/mash.js')

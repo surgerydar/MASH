@@ -98,11 +98,12 @@ Item {
     }
     Component.onCompleted: {
         //console.log('Mash : starting fadeTimer');
-        fadeTimer.start();
+        //fadeTimer.start();
     }
     //
     //
     //
     property alias sourceItem: source.sourceItem
     property alias shader: effect.fragmentShader
+    property alias fadeAnimation: fadeAnimation
 }

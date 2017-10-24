@@ -2,6 +2,7 @@ var env = process.env;
 var config = require('./config');
 var fs = require('fs');
 var request = require('request');
+var sharp = require('sharp');
 //var nlp = require('compromise')
 //var config = { ssl: { key: fs.readFileSync('./ssl/server.key'), cert: fs.readFileSync('./ssl/server.crt')}};
 
@@ -24,6 +25,55 @@ db.connect(
     var bodyParser = require('body-parser');
     var jsonParser = bodyParser.json();
     var mailer = require('./mailer.js');
+    var flash = require('connect-flash');
+    //
+    // authentication 
+    // TODO: move this to external module
+    //
+    var passport = require('passport');
+    var LocalStrategy = require('passport-local').Strategy;
+    passport.use('login',new LocalStrategy({ passReqToCallback : true },
+        function(req, username, password, callback) {
+            console.log( 'authenticating : ' + username );
+            db.findOne( 'user', { username: username } ).then( function(user) {
+                console.log( 'found user : ' + JSON.stringify(user) );
+                if (!user) callback(null, false);
+                if (user.password != password) callback(null, false);
+                callback(null, user);
+            }).catch( function( error ) {
+                callback(error);
+            });
+        }));
+    passport.serializeUser(function(user, callback) {
+        console.log( 'serialising user');
+        callback(null, user.id);
+    });
+    passport.deserializeUser(function(id, callback) {
+         console.log( 'deserialising user');
+         db.findOne('user', { id:id } ).then( function(user) {
+              callback(null, user);
+          }).catch( function( error ) {
+              callback( error );
+          });
+    });
+    function isAuthenticated(req, res, next) {
+		console.log( "path : " + req.path );
+		console.log( "user : " + req.user );
+		if ( req.user && req.isAuthenticated() ) {
+			return next();
+		} else {
+			console.log(req.route);
+			if( req.xhr ) {
+				// ajax requests get a brief response
+				console.log( 'rejecting xhr request' );
+				res.status(401).json({ status : 'ERROR', message : 'no longer logged in' });
+			} else {
+				// all others are redirected to login
+				console.log( 'redirecting to login' );
+				res.redirect('/login');
+			}
+		}
+	}
     //
     //
     //		
@@ -31,12 +81,17 @@ db.connect(
     //
     //
     //
-    bodyParser.json( {limit:'5mb'} );
+    app.use(bodyParser.json( {limit:'5mb'} ));
+	app.use(bodyParser.urlencoded({'limit': '5mb', 'extended': false }));
 	//
 	// configure express
 	//
 	app.set('view engine', 'pug');
     app.use(express.static(__dirname+'/static',{dotfiles:'allow'}));
+    app.use(require('cookie-parser')('unusual*windy'));
+    app.use(require('express-session')({ secret: 'unusual*windy', resave: false, saveUninitialized: false }));
+	app.use(passport.initialize());
+	app.use(passport.session());
     //
     // express routes
     //
@@ -54,9 +109,11 @@ db.connect(
             res.json( {status: 'ERROR', message: error } );
         });
     });
-    app.post('/unmash', jsonParser, function (req, res) {
+    app.delete('/mash/:id', function (req, res) {
         // remove mash
-        db.remove( req.body ).then( function( response ) {
+        console.log( 'deleting mash : ' + req.params.id );
+        let _id = db.ObjectId(req.params.id);
+        db.remove( 'mash', { _id: _id } ).then( function( response ) {
             res.json( {status: 'OK'} );
         } ).catch( function( error ) {
             res.json( {status: 'ERROR', message: error } );
@@ -73,7 +130,14 @@ db.connect(
     });
     app.get('/s/:id/:image', function(req, res) {
         let redirUrl = 'https://dl.dropboxusercontent.com:443/s/' + req.params.id + '/' + req.params.image;
-        request(redirUrl).pipe(res);
+        if ( req.query.width && req.query.height ) {
+            let width = parseInt(req.query.width);
+            let height = parseInt(req.query.height);
+            let transform = sharp().resize(width, height).max();
+            request(redirUrl).pipe(transform).pipe(res);
+        } else {
+            request(redirUrl).pipe(res);
+        }
     });
     //
     // direct
@@ -89,6 +153,39 @@ db.connect(
         }
     });
     //
+    // authentication
+    //
+    app.get('/login', function(req, res){
+        res.render('login');
+    });
+    app.post('/login', passport.authenticate('login', { failureRedirect: '/login', successRedirect: '/admin', }), function(req, res) {
+        res.redirect('/admin');
+    });
+    app.get('/logout', function(req, res){
+        req.logout();
+        res.redirect('/login');
+    });
+    //
+    // admin
+    //
+    app.get('/admin', isAuthenticated, function(req, res) {
+        db.find( 'mash', {"mash.type": "image"} ).then( function( images ) {
+            db.find( 'mash', {"mash.type": "text"} ).then( function( texts ) {
+                res.render('admin', { title: "MASH Admin", images: images, texts: texts } );
+            }).catch( function( error ) {
+                res.render('error', { message: error } );
+            });
+        }).catch( function( error ) {
+            res.render('error', { message: error } );
+        });
+    });
+    app.get('/instance/:id', isAuthenticated, function(req, res) {
+        var id = req.param.id.unescape();
+        var instance = wsr.getInstance(server.ws, req.param.id );
+        res.render( 'instance', { instance: instance } );
+    });
+    
+    //
     //
     //
     function formatResponse( data, status, message ) {
@@ -98,22 +195,6 @@ db.connect(
         if ( data ) response[ 'data' ] = data;
         return response;
     }
-    //
-    // remove these in production
-    //
-    app.get('/drop/:collection', function(req, res) {
-        // get single route
-        db.drop(req.params.collection).then( function( response ) {
-            res.json( {status: 'OK', data: response} );
-        }).catch( function( error ) {
-            res.json( {status: 'ERROR', message: JSON.stringify( error ) } );
-        });
-    });
-    app.get('/defaults', function(req, res) {
-        // get single route
-        db.setDefaults();
-        res.json( {status: 'OK'} );
-    });
     //
     // configure websockes
     //

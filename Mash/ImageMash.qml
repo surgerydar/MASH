@@ -14,9 +14,18 @@ Mash {
         //
         //
         //
+        onStatusChanged: {
+            if ( status === Image.Ready ) {
+                fadeAnimation.start();
+            }
+        }
+        //
+        //
+        //
         Component.onCompleted: {
             container.sourceItem = content;
         }
+
     }
     //
     //

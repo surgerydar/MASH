@@ -1,0 +1,16 @@
+html
+	head
+		title= title
+		link(rel='stylesheet', href='styles/mash.css')
+		meta( name='viewport' content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0' )
+	body
+		#container
+			h1( style='text-align: center' ) MASH
+			form#login( action='/login', method='POST')
+				input(type='text', name='username' placeholder='username',required, autofocus)
+				input(type='password', name='password' class='form-control', placeholder='password', required)
+				button(class='login', type='submit') Sign in
+				br
+				#message
+				if message
+					h1.text-center.error-message #{message}

@@ -1,0 +1,352 @@
+body {
+	font-family: "Lucida Grande", "Lucida Sans Unicode", Helvetica, Arial, sans-serif;
+	color: white;
+	background-color: darkGray;
+	margin: 0px;
+    overflow-x: hidden;
+}
+
+a {
+	color: white;
+	text-decoration: none;
+}
+
+h1 {
+	font-size: 24px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	cursor: pointer;
+}
+
+h2 {
+	font-size: 18px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	cursor: pointer;
+}
+
+h3 {
+	font-size: 12px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	cursor: pointer;
+}
+
+@media only screen and (max-width: 768px) {
+	h1 {
+		font-size: 18px;
+	}
+
+	h2 {
+		font-size: 12px;
+	}
+
+	h3 {
+		font-size: 10px;
+	}
+}
+
+#container {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	bottom: 0px;
+	right: 0px;
+	/*
+		flexbox
+	*/
+	display: flex;
+	flex-direction: column;
+    align-items: center;
+}
+
+header.content {
+	min-height: 32px;
+	padding: 8px;
+}
+
+nav.content {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+}
+
+.tab-button {
+	display: inline-block;
+	padding: 8px;
+	font-size: 16px;
+	text-align: center;
+	border: none;
+	cursor: default;
+}
+form#search-wrapper {
+	flex: 1 1 auto;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+}
+form#login {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+/*
+	inputs
+*/
+input[type='search'], input[type='text'], input[type='password'], input[type='email']  {
+	-webkit-appearance: none;
+	height: 64px;
+	padding: 16px 16px;
+	border: none;
+	border-radius: 32px;
+	flex: none;
+    font-size: 32px;
+}
+input[type='search']#search {
+	padding: 8px 8px;
+}
+
+input[type='text'], input[type='password'], input[type='email']  {
+	width: 90%;
+	margin: 16px 8px;
+}
+input[type='search']:focus, input[type='text']:focus, input[type='password']:focus, input[type='email']:focus {
+    border-color: none;
+    box-shadow: none;
+    -webkit-box-shadow: none;
+    outline: none;
+}
+
+button {
+    background-color: lightGray;
+    color: white;
+    padding: 14px 20px;
+    margin: 8px 0;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+}
+
+main.content {
+	position: relative;
+	min-height: 0px;
+	background-color: white;
+    flex: 1 1 auto;
+	display: flex;
+	flex-direction: column;
+	overflow: auto;
+}
+
+nav.list_pagination {
+	min-height: 46px;
+	background-color: lightGray;
+	display: flex;
+	flex-direction: row;	
+}
+
+.list_pagnation_item {
+	width: 44px;
+	height: 44px;
+	line-height: 44px; 
+	text-align: center;
+	color: white;
+	border: solid 1px white;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.list_scroller {
+	position: relative;
+	flex: 1 1 auto;
+	overflow-x: hidden;
+	overflow-y: scroll;
+	-webkit-overflow-scrolling: touch;
+}
+
+.list_item {
+	width: 100%;
+	padding: 8px;
+	color: darkGray;
+	background-color: white;
+	border-bottom: 1px solid darkGray;
+}
+.list_item_nowplaying {
+	color: white;
+	background-color: darkGray;
+	border-bottom: 1px solid darkGray;
+}
+
+.scrollview_background {
+	position: relative;
+	background-color: lightGray;
+}
+.scrollview_cell {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	right: 0px;
+	height: 128px;
+	padding: 8px;
+	color: darkGray;
+	background-color: white;
+	border-bottom: 1px solid darkGray;
+}
+.scrollview_cell_nowplaying {
+	color: white;
+	background-color: lightGray;
+	border-bottom: 1px solid darkGray;
+}
+
+/*
+	player
+*/
+#player {
+	min-height: 48px;
+	background-color: darkGray;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	flex-wrap: wrap;
+}
+@media only screen and (max-width: 768px) {
+	#player {
+		min-height: 96px;
+	}
+}
+
+.player-group {
+	min-height: 48px;
+	flex: 1 1 auto;
+	display: flex;
+	flex-direction: row;
+	align-items: center;	
+}
+
+img.button {
+	flex: 0 0 auto;
+	width: 48px;
+	height: 48px;
+}
+
+#playlist-nowplaying {
+	min-width: 96px;
+	height: 26px;
+	padding: 2px 8px 2px 8px;
+	margin-right: 4px;
+	border-radius: 17px 0 0 17px;
+	color: darkGray;
+	background-color: white;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	text-align: center;
+	font-size: 10px;
+	flex: 1 1 auto;
+}
+
+.disabled {
+	opacity: 0.4;
+}
+input[type='range'] {
+	-webkit-appearance: none;
+	min-width: 96px;
+	height: 24px;
+	padding: 0 16px 0 16px;
+	background: none;
+	flex: 1 1 auto;
+}
+input[type='range']::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	background-color: darkGray;
+	margin-top: -8px;
+	height: 24px;
+	width: 24px;
+	border: 6px solid white;
+	border-radius: 12px;
+}
+input[type='range']::-webkit-slider-runnable-track {
+	-webkit-appearance: none;
+	background-color: white;
+	height: 8px;
+	width: 100%;
+}
+input[type='range']::-moz-range-thumb {
+	background-color: darkGray;
+	margin-top: -8px;
+	height: 24px;
+	width: 24px;
+	border: 6px solid white;
+	border-radius: 12px;
+}
+input[type='range']::-moz-range-track {
+	background-color: white;
+	border: none;
+	border-radius: 0px;
+	height: 8px;
+	width: 100%;
+}
+input[type='range']::-ms-fill-lower {
+	background-color: white;
+	height: 8px;
+}
+input[type='range']::-ms-fill-upper {
+	background-color: white;
+	height: 8px;
+}
+input[type='range']::-ms-thumb {
+	background-color: darkGray;
+	margin-top: -8px;
+	height: 24px;
+	width: 24px;
+	border: 6px solid white;
+	border-radius: 12px;
+}
+
+.gallery {
+    width: 100%;
+    height: 128px;
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: flex-start;
+    align-items: stretch;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.thumbnail {
+    position: relative;
+    width: auto;
+    height: 128px;
+    max-width: 256px;
+    flex: none;
+    overflow: hidden;
+}
+
+.thumbnail > img {
+    height: 100%;
+    width: auto;
+}
+
+.delete {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 16px;
+    height: 16px;
+    background-image: url( 'images/delete.png' );
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+/*
+	file upload
+*/
+.dragtarget {
+	border: 2px dashed darkGray;
+	border-radius: 7px;
+	box-shadow: inset 0 3px 4px #888;
+}

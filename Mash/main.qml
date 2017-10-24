@@ -5,6 +5,7 @@ import QtQuick.Window 2.2
 
 import SodaControls 1.0
 import "Layout.js" as Layout
+import "utils.js" as Utils
 
 ApplicationWindow {
     id: appWindow
@@ -18,13 +19,14 @@ ApplicationWindow {
         //
         //
         //
-
         Rectangle {
             //id: background
             anchors.fill: parent
             color: "black"
         }
-
+        //
+        //
+        //
         CompositeImage {
             id: background
             anchors.fill: parent
@@ -39,23 +41,6 @@ ApplicationWindow {
             anchors.fill: parent
             shader: shaders[ currentShader ].background
         }
-        //
-        //
-        //
-        Text {
-            id: status
-            anchors.top: parent.top
-            anchors.left: parent.left
-            color: "white"
-        }
-        /*
-        Image {
-            id: cumulative
-            source: "image://cached/http://2.bp.blogspot.com/-faPm9YnUMBs/UfcfajVmPgI/AAAAAAAAAEk/pZNoKICb7j0/s320/embersToAshes.png"
-            anchors.top: parent.top
-            anchors.left: parent.left
-        }
-        */
         Item {
             id: mashContainer
             anchors.fill: parent
@@ -68,6 +53,15 @@ ApplicationWindow {
             anchors.left: parent.left
             anchors.bottom: parent.bottom
             anchors.right: parent.right
+        }
+        //
+        //
+        //
+        Text {
+            id: status
+            anchors.top: parent.top
+            anchors.left: parent.left
+            color: "white"
         }
         //
         //
@@ -146,17 +140,42 @@ ApplicationWindow {
         }
 
         if ( mash.content && mash.content.length > 0 ) {
+            //
+            // trim spaces
+            //
             mash.content = mash.content.trim();
-
+            //
+            // random offset
+            //
+            bounds.x += ( .5 - Math.random() ) * 15;
+            bounds.y += ( .5 - Math.random() ) * 15;
+            bounds.width = Math.min( bounds.width, width - bounds.x );
+            bounds.height = Math.min( bounds.height, height - bounds.y );
             switch( mash.type ) {
             case "text" :
                 console.log( 'creating text instance at : ' + JSON.stringify(bounds) );
-                textComponent.createObject(mashContainer,{ "x":bounds.x, "y":bounds.y, "width": bounds.width, "height": bounds.height, "text":mash.content, "colour": textColour, "shader": shaders[ currentShader ].mash});
+                //
+                // extend to fill width
+                //
+                bounds.width = width - bounds.x;
+                //
+                // convert entities for display
+                //
+                mash.content = Utils.decodeHTMLEntities(mash.content);
+                //
+                //
+                //
+                //var hAlign = Math.random() > .5 ? Text.AlignLeft : Text.AlignRight;
+                var hAlign = Text.AlignLeft;
+                var vAlign = Math.random() > .5 ? Text.AlignTop : Text.AlignBottom;
+                textComponent.createObject(mashContainer,{ "x":bounds.x, "y":bounds.y, "width": bounds.width, "height": bounds.height, "text":mash.content, "colour": textColour, "shader": shaders[ currentShader ].mash, "hAlign": hAlign, "vAlign": vAlign});
                 break;
             case "image" :
                 console.log( 'creating image instance at : ' + JSON.stringify(bounds) );
+                //
+                // redirect dropbox through mash proxy
+                //
                 mash.content = mash.content.replace('https://dl.dropboxusercontent.com:443','http://mash.soda.co.uk');
-                //imageComponent.createObject(root,{ "x":bounds.x, "y":bounds.y, "width": bounds.width, "height": bounds.height, "source":mash.content, "shader": shaders[ currentShader ].mash});
                 imageComponent.createObject(mashContainer,{ "x":bounds.x, "y":bounds.y, "width": bounds.width, "height": bounds.height, "source":"image://cached/" + mash.content.trim(), "shader": shaders[ currentShader ].mash});
                 break;
             }
@@ -241,10 +260,31 @@ ApplicationWindow {
             case 'imagesource' :
                 imageSource = command.source;
                 break;
+            case 'configuration' :
+                send( { command: 'configuration',
+                         configuration: getConfiguration()
+                     });
             }
 
         }
     }
+    function getConfiguration() {
+        return {
+            effect: currentShader,
+            textColour: textColour,
+            backgroundColour: backgroundColour,
+            textSource: textSource,
+            imageSource: imageSource
+        };
+    }
+    function setConfiguration( configuration ) {
+        currentShader = configuration.effect || currentShader;
+        textColour = configuration.textColour || textColour;
+        backgroundColour = configuration.backgroundColour || backgroundColour;
+        textSource = configuration.textSource || textSource;
+        imageSource = configuration.imageSource || imageSource;
+    }
+
     Timer {
         id: mashTimer
         //
@@ -364,6 +404,9 @@ ApplicationWindow {
     //
     //
     Component.onCompleted: {
+        //
+        // Load settings
+        //
         Settings.load();
         instance = Settings.get("instance");
         if ( instance === "" ) {
@@ -371,17 +414,45 @@ ApplicationWindow {
             Settings.set("instance",instance);
             Settings.save();
         }
+        var configuration = Settings.get("configuration");
+        if ( configuration !== "" ) {
+            try {
+                setConfiguration(JSON.parse(configuration));
+            } catch( error ) {
+                console.log( 'error restoring configuration : ' + error );
+            }
+        }
+        //
+        // Load database
+        //
         Database.load();
+        //
+        // Start animation
+        //
         mashTimer.start();
         imageTimer.start();
         textTimer.start();
+        //
+        // Open communications with the server
+        //
         webSocketChannel.open();
+        //
+        // Initialise layout
+        //
         Layout.setup({x:0.,y:0.,width:appWindow.width,height:appWindow.height});
+        //
+        // Go fullscreen
+        //
+        appWindow.showFullScreen();
     }
+    //
+    //
+    //
     Component.onDestruction: {
         Database.save();
+        Settings.set("configuration", JSON.stringify(getConfiguration()));
+        Settings.save();
     }
-
     //
     //
     //
