@@ -13,17 +13,20 @@ ApplicationWindow {
     width: 1000
     height: 500
     title: qsTr("MASH")
+
     Item {
         id: root
         anchors.fill: parent
         //
         //
         //
+        /*
         Rectangle {
             //id: background
             anchors.fill: parent
             color: "black"
         }
+        */
         //
         //
         //
@@ -31,15 +34,22 @@ ApplicationWindow {
             id: background
             anchors.fill: parent
         }
+        ShaderEffectSource {
+            id: backgroundSource
+            anchors.fill: parent
+            sourceItem: background
+            hideSource: true
+            visible: false
+        }
         //
         //
         //
         Background {
             id: dynamicBackground
             //visible: false
-            opacity: .75
             anchors.fill: parent
             shader: shaders[ currentShader ].background
+            source: backgroundSource
         }
         Item {
             id: mashContainer
@@ -76,7 +86,12 @@ ApplicationWindow {
         }
 
     }
-
+    //
+    //
+    //
+    RegisterDialog {
+        id: firstRun
+    }
     //
     //
     //
@@ -97,7 +112,7 @@ ApplicationWindow {
     //
     //
     //
-    NumberAnimation on globalTime { loops: Animation.Infinite; from: 0.; to: 1000.; duration: 500000 }
+    NumberAnimation on globalTime { loops: Animation.Infinite; from: 0.; to: 10000.; duration: 5000000 }
     //
     //
     //
@@ -147,10 +162,12 @@ ApplicationWindow {
             //
             // random offset
             //
+            /*
             bounds.x += ( .5 - Math.random() ) * 15;
             bounds.y += ( .5 - Math.random() ) * 15;
             bounds.width = Math.min( bounds.width, width - bounds.x );
             bounds.height = Math.min( bounds.height, height - bounds.y );
+            */
             switch( mash.type ) {
             case "text" :
                 console.log( 'creating text instance at : ' + JSON.stringify(bounds) );
@@ -230,7 +247,28 @@ ApplicationWindow {
             var command = JSON.parse(message);
             switch( command.command.toLowerCase() ) {
             case 'welcome' :
-                guid = send( { command: 'thankyou', instance: instance } );
+                if ( instance !== "" && account !== "" ) {
+                    connectDisplay();
+                }
+                break;
+            case 'registerdisplay' :
+                if ( command.status === "OK" ) {
+                    Settings.set( "account", command.account );
+                    Settings.save();
+                    connectDisplay();
+                    firstRun.close();
+                } else {
+                    firstRun.errorText = "ERROR: " + command.response;
+                }
+
+                break;
+            case 'connectdisplay' :
+                if ( command.status === "ERROR" ) {
+                    //
+                    //
+                    //
+                    console.log( "ERROR connecting display : " + command.error );
+                }
                 break;
             case 'text' :
                 //instanciateMash( {type:"text", content:command.content} );
@@ -279,12 +317,26 @@ ApplicationWindow {
     }
     function setConfiguration( configuration ) {
         currentShader = configuration.effect || currentShader;
-        textColour = configuration.textColour || textColour;
-        backgroundColour = configuration.backgroundColour || backgroundColour;
+        if ( configuration.textColour ) {
+            textColour = Qt.rgba(
+                        configuration.textColour["r"] || 1,
+                        configuration.textColour["g"] || 0,
+                        configuration.textColour["b"] || 0,
+                        configuration.textColour["a"] || 1);
+        }
+        if ( configuration.backgroundColour ) {
+            backgroundColour = Qt.rgba(
+                        configuration.backgroundColour["r"] || 0,
+                        configuration.backgroundColour["g"] || 0,
+                        configuration.backgroundColour["b"] || 0,
+                        configuration.backgroundColour["a"] || 1);
+        }
         textSource = configuration.textSource || textSource;
         imageSource = configuration.imageSource || imageSource;
     }
-
+    //
+    //
+    //
     Timer {
         id: mashTimer
         //
@@ -362,6 +414,24 @@ ApplicationWindow {
     //
     //
     //
+    function registerDisplay( accountKey ) {
+        webSocketChannel.send( { command: 'registerdisplay', display: instance, account: accountKey } );
+    }
+
+    function connectDisplay() {
+        if ( instance !== "" && account !== "" ) {
+            webSocketChannel.send( { command: 'connectdisplay', display: instance, account: account } );
+        }
+    }
+    function disconnectDisplay() {
+        if ( instance !== "" && account !== "" ) {
+            webSocketChannel.send( { command: 'disconnectdisplay', display: instance, account: account } );
+        }
+    }
+
+    //
+    //
+    //
     Shortcut {
         sequence: "Ctrl+F"
         onActivated: {
@@ -371,13 +441,15 @@ ApplicationWindow {
     Shortcut {
         sequence: StandardKey.MoveToNextChar
         onActivated: {
-            setShader( currentShader + 1 );
+            //setShader( currentShader + 1 );
+            nextShader = currentShader + 1;
         }
     }
     Shortcut {
         sequence: StandardKey.MoveToPreviousChar
         onActivated: {
-            setShader( currentShader - 1 );
+            //setShader( currentShader - 1 );
+            nextShader = currentShader - 1;
         }
     }
     //
@@ -386,20 +458,11 @@ ApplicationWindow {
     onWidthChanged: {
         Layout.setup({x:0.,y:0.,width:width,height:height});
     }
-    //
-    //
-    //
-    property variant shaders: [
-        { background: "qrc:shaders/underwatercaustics.frag", mash: "qrc:shaders/underwatercaustics-offset.frag" },
-        { background: "qrc:shaders/fuzzy.frag", mash: "qrc:shaders/fuzzy-offset.frag" },
-        { background: "qrc:shaders/clouds.frag", mash: "qrc:shaders/clouds-offset.frag" },
-        { background: "qrc:shaders/colourflow.frag", mash: "qrc:shaders/colourflow-offset.frag" },
-        { background: "qrc:shaders/grayflow.frag", mash: "qrc:shaders/grayflow-offset.frag" },
-        { background: "qrc:shaders/dynamicflow.frag", mash: "qrc:shaders/dynamicflow-offset.frag" }
-    ]
-    //
-    //
-    //
+    onFrameSwapped: {
+        if ( currentShader !== nextShader ) {
+            setShader(nextShader);
+        }
+    }
     //
     //
     //
@@ -409,10 +472,14 @@ ApplicationWindow {
         //
         Settings.load();
         instance = Settings.get("instance");
-        if ( instance === "" ) {
-            instance = GUIDGenerator.generate();
-            Settings.set("instance",instance);
-            Settings.save();
+        account = Settings.get("account");
+        if ( account === "" || instance === "" ) {
+            if ( instance === "" ) {
+                instance = GUIDGenerator.generate();
+                Settings.set("instance",instance);
+                Settings.save();
+            }
+            firstRun.open();
         }
         var configuration = Settings.get("configuration");
         if ( configuration !== "" ) {
@@ -426,6 +493,11 @@ ApplicationWindow {
         // Load database
         //
         Database.load();
+        //
+        //
+        //
+        background.load();
+        background.start();
         //
         // Start animation
         //
@@ -449,14 +521,44 @@ ApplicationWindow {
     //
     //
     Component.onDestruction: {
+        //
+        //
+        //
+        disconnectDisplay();
+        //
+        //
+        //
+        background.stop();
+        background.save();
+        //
+        //
+        //
         Database.save();
+        //
+        //
+        //
         Settings.set("configuration", JSON.stringify(getConfiguration()));
         Settings.save();
     }
     //
     //
     //
-    property int currentShader: 4
+    //
+    //
+    //
+    property variant shaders: [
+        { background: "qrc:shaders/underwatercaustics.frag", mash: "qrc:shaders/underwatercaustics-offset.frag" },
+        { background: "qrc:shaders/fuzzy.frag", mash: "qrc:shaders/fuzzy-offset.frag" },
+        { background: "qrc:shaders/clouds.frag", mash: "qrc:shaders/clouds-offset.frag" },
+        { background: "qrc:shaders/colourflow.frag", mash: "qrc:shaders/colourflow-offset.frag" },
+        { background: "qrc:shaders/grayflow.frag", mash: "qrc:shaders/grayflow-offset.frag" },
+        { background: "qrc:shaders/dynamicflow.frag", mash: "qrc:shaders/dynamicflow-offset.frag" },
+        { background: "qrc:shaders/optimised-caustics.frag", mash: "qrc:shaders/grayflow-offset.frag" },
+        { background: "qrc:shaders/smokey.frag", mash: "qrc:shaders/grayflow-offset.frag" },
+        { background: "qrc:shaders/oiley.frag", mash: "qrc:shaders/oiley-offset.frag" }
+    ]
+    property int currentShader: 6//4
+    property int nextShader: 6
     property real globalTime: 0
     property alias cumulative: background
     property color textColour: "red"
@@ -464,4 +566,5 @@ ApplicationWindow {
     property string imageSource: ""
     property string textSource: ""
     property string instance: ""
+    property string account: ""
  }

@@ -94,6 +94,22 @@ Db.prototype.getMash = function( time ) {
 //
 // generic methods
 //
+Db.prototype.insert = function( collection, data ) {
+	var db = this.db;
+	return new Promise( function( resolve, reject ) {
+		try {
+			db.collection( collection ).insert( data, function(err,result) {
+				if ( err ) {
+					reject( err );
+				} else {
+					resolve( result );
+				}
+			});
+		} catch( err ) {
+			reject( err );
+		}
+	});
+}
 Db.prototype.find = function( collection, query, projection ) {
 	var db = this.db;
 	return new Promise( function( resolve, reject ) {
@@ -110,16 +126,18 @@ Db.prototype.find = function( collection, query, projection ) {
 		}
 	});
 }
+
 Db.prototype.findOne = function( collection, query, projection ) {
 	var db = this.db;
 	return new Promise( function( resolve, reject ) {
 		try {
-            console.log( 'find : ' + collection + ' : ' + JSON.stringify(query) );
-			db.collection( collection ).findOne( query, projection, function(err,result) {
+			db.collection( collection ).findOne( query, projection, function(err, result) {
 				if ( err ) {
 					reject( err );
+                } else if ( result ) {
+                    resolve( result );
 				} else {
-					resolve( result );
+					reject( new Error( 'no documents matching query ' + JSON.stringify(query) + ' found in collection ' + collection ) );
 				}
 			});
 		} catch( err ) {
@@ -132,7 +150,8 @@ Db.prototype.update = function( collection, query, update, options ) {
 	var db = this.db;
 	return new Promise( function( resolve, reject ) {
 		try {
-			db.collection( collection ).update( query, projection, options, function(err,result) {
+            options = options || {};
+			db.collection( collection ).update( query, update, options, function(err, result) {
 				if ( err ) {
 					reject( err );
 				} else {

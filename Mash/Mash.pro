@@ -12,7 +12,10 @@ SOURCES += main.cpp \
     guidgenerator.cpp \
     settings.cpp \
     cachedimageprovider.cpp \
-    networkaccess.cpp
+    networkaccess.cpp \
+    networkconfiguration.cpp \
+    noise.cpp \
+    effect.cpp
 
 RESOURCES += qml.qrc
 
@@ -50,4 +53,7 @@ HEADERS += \
     guidgenerator.h \
     settings.h \
     cachedimageprovider.h \
-    networkaccess.h
+    networkaccess.h \
+    networkconfiguration.h \
+    noise.h \
+    effect.h

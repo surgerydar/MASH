@@ -5,13 +5,28 @@ Item {
     //
     //
     //
-
+    Image {
+        id: noise
+        width: 512
+        height: 512
+        source: "image://noise/background"
+    }
+    ShaderEffectSource {
+        id: noiseSource
+        sourceItem: noise
+        hideSource: true;
+        wrapMode: ShaderEffectSource.Repeat
+    }
+    //
+    //
+    //
     ShaderEffectSource {
         id: source
         visible: false
         hideSource: true
         anchors.fill: parent
         //sourceItem: content
+        wrapMode: ShaderEffectSource.Repeat
     }
     //
     //
@@ -22,6 +37,7 @@ Item {
         vertexShader: "qrc:shaders/passthrough.vert"
         fragmentShader: "qrc:shaders/underwatercaustics-offset.frag"
         visible: fadeAnimation.running
+        property variant noiseTexture: noiseSource
         property variant src: source
         property real time: appWindow.globalTime
         property variant resolution: Qt.size(appWindow.width, appWindow.height)
@@ -33,6 +49,15 @@ Item {
         property variant amplitude: appWindow.width / 16.
         property variant frequency: 60.
         property variant baseColour: appWindow.backgroundColour
+        property variant noiseTextureSize: Qt.size(noise.width, noise.height)
+        //
+        //
+        //
+        onStatusChanged: {
+            if ( status === ShaderEffect.Error ) {
+                console.log( 'Mash : GLSL error log:\n' + log );
+            }
+        }
     }
     //
     //
@@ -42,6 +67,7 @@ Item {
         NumberAnimation {
             target: effect
             properties: "imageMix,opacity"
+            //properties: "imageMix"
             from: 0.
             to: 1.
             duration: 1000 * 10
@@ -53,6 +79,7 @@ Item {
         NumberAnimation {
             target: effect
             properties: "imageMix,opacity"
+            //properties: "imageMix"
             from: 1.
             to: .15
             duration: 1000 * (5.*.85)
@@ -65,7 +92,8 @@ Item {
         }
         NumberAnimation {
             target: effect
-            properties: "imageMix,opacity"
+            //properties: "imageMix,opacity"
+            properties: "imageMix"
             from: .15
             to: 0.
             duration: 1000 * (5.*.15)

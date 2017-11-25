@@ -70,7 +70,7 @@ void Settings::save() {
     if (jsonFile.open(QIODevice::WriteOnly)) {
         QJsonDocument document;
         document.setObject(QJsonObject::fromVariantMap(m_settings));
-        QByteArray json = document.toJson();
+        QByteArray json = document.toJson(QJsonDocument::Indented);
         jsonFile.write(json);
     } else {
         QString error = "Unable to open file : ";

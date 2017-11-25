@@ -11,8 +11,7 @@ WebSocketRouter.prototype.connection = function(wss,ws) {
     //
     //
     //
-    let clientId = ++this.clientId;
-    console.log( 'connection from : ' + clientId );
+    console.log( 'new connection' );
     ws.on('message', (message) => {
         self.message(wss,ws,message);
     });
@@ -26,7 +25,7 @@ WebSocketRouter.prototype.connection = function(wss,ws) {
         console.log('WebSocketRouter.socketError: ' + error);
     });
     ws.on('close', (code,reason) => {
-        console.log( 'connection closed : ' + clientId );
+        console.log( 'connection closed' );
     });
     //
     //
@@ -47,18 +46,7 @@ WebSocketRouter.prototype.message = function( wss, ws, message ) {
                 console.log( 'processing command : ' + command.command );
                 this.jsonRoutes[ command.command ]( wss, ws, command );
             } else {
-                if ( command.command === 'thankyou' ) {
-                    console.log( 'processing command : ' + command.command + ' : instance : ' + command.instance );
-                    ws.instance = command.instance;
-                    let response = {
-                        command: 'configuration'
-                    };
-                    ws.send(JSON.stringify(response));
-                } else if ( command.command === 'configuration' ) {
-                    ws.configuration = command.configuration;
-                } else {
-                    console.log( 'WebSocketRouter.message : unable to process message ' + message  );
-                }
+                console.log( 'WebSocketRouter.message : unable to process message ' + message  );
             }
         } else {
             //
@@ -77,58 +65,19 @@ WebSocketRouter.prototype.message = function( wss, ws, message ) {
     }
 }
 
-WebSocketRouter.prototype.relay = function( wss, ws, command ) {
-    //
-    // relay to all other sockets
-    //
-    var message = JSON.stringify( command );
-    console.log('WebSocketRouter.relay:' + command.command);
-    wss.clients.forEach(function(client) {
-        if (client !== ws && client.readyState === WebSocket.OPEN) {
-            client.send(message);
-        }
-    });
-}
-
-WebSocketRouter.prototype.send = function( wss, instance, command ) {
+WebSocketRouter.prototype.sendcommand = function( wss, guid, account, command ) {
     //
     // send to specific instance
     //
     var message = JSON.stringify( command );
-    console.log('WebSocketRouter.send:' + message + ' to ' + instance);
+    console.log('WebSocketRouter.send:' + message + ' to ' + guid);
     wss.clients.forEach(function(client) {
-        console.log( 'client.instance=' + client.instance );
-        if (client.instance === instance && client.readyState === WebSocket.OPEN) {
+        if (client.mash && client.mash.guid === guid && client.mash.account === account && client.readyState === WebSocket.OPEN) {
             client.send(message);
         }
     });
 }
 
-WebSocketRouter.prototype.getInstance = function( wss, instance ) {
-    var instances = [];
-    wss.clients.forEach(function(client) {
-        if (client.readyState === WebSocket.OPEN && client.instance === instance ) {
-            return {
-                instance: client.instance,
-                configuration: client.configuration
-            };
-        }
-    });
-    return undefined;
-}
-
-WebSocketRouter.prototype.getInstances = function( wss ) {
-    var instances = [];
-    wss.clients.forEach(function(client) {
-        if (client.readyState === WebSocket.OPEN) {
-            instances.push( {
-                instance: client.instance,
-                configuration: client.configuration
-            });
-        }
-    });
-    return instances;
-}
 
 WebSocketRouter.prototype.json = function( command, handler ) {
     this.jsonRoutes[ command ] = handler;

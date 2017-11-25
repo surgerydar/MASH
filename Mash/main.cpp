@@ -9,6 +9,8 @@
 #include "guidgenerator.h"
 #include "settings.h"
 #include "cachedimageprovider.h"
+#include "networkconfiguration.h"
+#include "noise.h"
 
 int main(int argc, char *argv[])
 {
@@ -37,6 +39,11 @@ int main(int argc, char *argv[])
     //
     //
     engine.addImageProvider("cached",new CachedImageProvider);
+    engine.addImageProvider("noise",new Noise);
+    //
+    //
+    //
+    //NetworkConfiguration::shared()->update();
     //
     //
     //

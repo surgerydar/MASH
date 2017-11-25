@@ -20,7 +20,7 @@ db.connect(
     //
     // configure express
     //
-    console.log('initialising express');
+    console.log('initialising server');
     var express = require('express');
     var bodyParser = require('body-parser');
     var jsonParser = bodyParser.json();
@@ -30,6 +30,7 @@ db.connect(
     // authentication 
     // TODO: move this to external module
     //
+    console.log( 'initialising authentication' );
     var passport = require('passport');
     var LocalStrategy = require('passport-local').Strategy;
     passport.use('login',new LocalStrategy({ passReqToCallback : true },
@@ -77,6 +78,7 @@ db.connect(
     //
     //
     //		
+    
     var app = express();
     //
     //
@@ -86,6 +88,7 @@ db.connect(
 	//
 	// configure express
 	//
+    console.log('configuring express');
 	app.set('view engine', 'pug');
     app.use(express.static(__dirname+'/static',{dotfiles:'allow'}));
     app.use(require('cookie-parser')('unusual*windy'));
@@ -95,6 +98,7 @@ db.connect(
     //
     // express routes
     //
+    console.log('initialising routes');
 	app.get('/', function (req, res) {
         res.json({ status: 'ok' });
 	});
@@ -113,7 +117,7 @@ db.connect(
         // remove mash
         console.log( 'deleting mash : ' + req.params.id );
         let _id = db.ObjectId(req.params.id);
-        db.remove( 'mash', { _id: _id } ).then( function( response ) {
+        db.remove( 'mash',  { _id: _id } ).then( function( response ) {
             res.json( {status: 'OK'} );
         } ).catch( function( error ) {
             res.json( {status: 'ERROR', message: error } );
@@ -137,19 +141,6 @@ db.connect(
             request(redirUrl).pipe(transform).pipe(res);
         } else {
             request(redirUrl).pipe(res);
-        }
-    });
-    //
-    // direct
-    //
-    app.post('/direct', jsonParser, function (req, res) {
-        // store mash
-        console.log( 'post direct : ' + JSON.stringify(req.body) );
-        try {
-            wsr.send(server.ws, req.body.instance, req.body.command);
-            res.json( {status: 'OK'} );
-        } catch( error ) {
-            res.json( {status: 'ERROR', message: error } );
         }
     });
     //
@@ -196,17 +187,39 @@ db.connect(
         return response;
     }
     //
-    // configure websockes
+    // configure websockets
     //
+    console.log('creating websocketrouter');
     var wsr = require('./websocketrouter');
+    //
+    //
+    //
+    console.log('creating displaycontrol');
+    let displaycontrol = require('./displaycontrol');
+    displaycontrol.setup(wsr,db);
+    //
+    // direct commands
+    //
+    app.post('/direct', jsonParser, function (req, res) {
+        // store mash
+        console.log( 'post direct : ' + JSON.stringify(req.body) );
+        try {
+            wsr.send(server.ws, req.body.instance, req.body.command);
+            res.json( {status: 'OK'} );
+        } catch( error ) {
+            res.json( {status: 'ERROR', message: error } );
+        }
+    });
     //
     // create server
     //
+    console.log('creating server');
     var httpx = require('./httpx');
     var server = httpx.createServer(config.ssl, { http:app, ws:wsr });
     //
     // start listening
     //
+    console.log('starting server');
     try {
         server.listen(env.NODE_PORT || 3000, env.NODE_IP || 'localhost', () => console.log('Server started'));
     } catch( error ) {

@@ -173,9 +173,11 @@ void CachedImageProvider::load() {
         if ( document.isObject() ) {
             s_cache = document.object().toVariantMap();
             qDebug() << "CachedImageProvider : loaded";
+            /*
             for ( auto& key : s_cache ) {
                 qDebug() << key;
             }
+            */
         } else {
             QString error = "CachedImageProvider : error parsing : ";
             error.append( parseError.errorString() );

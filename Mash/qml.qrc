@@ -31,5 +31,12 @@
         <file>Mash.qml</file>
         <file>Banner.qml</file>
         <file>utils.js</file>
+        <file>shaders/optimised-caustics.frag</file>
+        <file>shaders/optimised-caustics-offset.frag</file>
+        <file>shaders/smokey.frag</file>
+        <file>shaders/oiley.frag</file>
+        <file>shaders/common.frag</file>
+        <file>shaders/oiley-offset.frag</file>
+        <file>RegisterDialog.qml</file>
     </qresource>
 </RCC>

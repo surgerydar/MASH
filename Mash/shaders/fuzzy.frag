@@ -87,8 +87,7 @@ float Circle( vec2 p, float r )
 void BokehLayer( inout vec3 color, vec2 p, vec3 c, float radius )
 {
     float wrap = 450.0;
-    if ( mod( floor( p.y / wrap + 0.5 ), 2.0 ) == 0.0 )
-    {
+    if ( mod( floor( p.y / wrap + 0.5 ), 2.0 ) == 0.0 ) {
         p.x += wrap * 0.5;
     }
     //	p.x += sin(time) * 20.0;

@@ -187,7 +187,7 @@ var rest = {
 
 ( function( w, d ) {
     //
-    // hook toolbar items
+    // hook device selector
     //
     var deviceGuid = d.querySelector('#device-guid');
     if ( deviceGuid ) {
