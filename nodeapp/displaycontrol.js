@@ -36,7 +36,7 @@ DisplayControl.prototype.registerdisplay = function( wss, ws, command ) {
                 ws.send(JSON.stringify(command));
            } else {
                _db.findOne( 'user', { id: command.account } ).then( function( response ) {
-                    _db.insert( 'display', { display: command.display, account: command.account } ).then( function( response ) {
+                    _db.insert( 'display', { display: command.display, account: command.account, configuration: command.configuration || {} } ).then( function( response ) {
                         command.status = 'OK';
                         command.response = response;
                         ws.send(JSON.stringify(command));
@@ -68,7 +68,17 @@ DisplayControl.prototype.updatedisplayconfiguration = function( wss, ws, command
     // syncronise display configuration
     //
     process.nextTick(function(){ 
+        //
+        // store in database
+        //
         _db.update( 'display', { $and : [ { display: command.display }, { account: command.account } ] }, { $set: { configuration: command.configuration } } ).then( function( response ) {
+            //
+            // forward to display
+            //
+            _wsr.sendcommand( wss, command.display, command.account, command );
+            //
+            // reply to sender
+            //
             command.status = 'OK';
             command.response = response;
             ws.send(JSON.stringify(command));
@@ -89,7 +99,7 @@ DisplayControl.prototype.configuredisplay = function( wss, ws, command ) {
     // 
     //
     process.nextTick(function(){ 
-        _db.findOne( 'display', { $and : [ { display: command.display }, { account: command.account } ] } ).then( function( response ) { // check device is registered to account
+        _db.findOne( 'display', { $and : [ { display: command.display }, { account: command.account } ] } ).then( function( response ) { 
             _wsr.sendcommand( command.display, command.account, command );
             command.status = 'OK';
             ws.send(JSON.stringify(command));
@@ -111,7 +121,12 @@ DisplayControl.prototype.connectdisplay = function( wss, ws, command ) {
         _db.update( 'display', { $and : [ { display: command.display }, { account: command.account } ] }, { $set:{ connected: true } } ).then( function( response ) { 
             ws.mash = { display: command.display, account: command.account };
             command.status = 'OK';
-            ws.send(JSON.stringify(command));
+            _db.findOne( 'display', { $and : [ { display: command.display }, { account: command.account } ] } ).then( function( response ) {
+                command.configuration = response.configuration;
+                ws.send(JSON.stringify(command));
+            }).catch( function( error ) {
+                ws.send(JSON.stringify(command));
+            });
         }).catch( function( error ) {
             console.log( 'DisplayControl.connectdisplay : error : ' + error );
             command.status = 'ERROR';

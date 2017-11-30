@@ -33,7 +33,8 @@ db.connect(
     console.log( 'initialising authentication' );
     var passport = require('passport');
     var LocalStrategy = require('passport-local').Strategy;
-    passport.use('login',new LocalStrategy({ passReqToCallback : true },
+    passport.use('login', new LocalStrategy(
+        { passReqToCallback : true },
         function(req, username, password, callback) {
             console.log( 'authenticating : ' + username );
             db.findOne( 'user', { username: username } ).then( function(user) {
@@ -42,15 +43,13 @@ db.connect(
                 if (user.password != password) callback(null, false);
                 callback(null, user);
             }).catch( function( error ) {
-                callback(error);
+                callback(null,false);
             });
         }));
     passport.serializeUser(function(user, callback) {
-        console.log( 'serialising user');
         callback(null, user.id);
     });
     passport.deserializeUser(function(id, callback) {
-         console.log( 'deserialising user');
          db.findOne('user', { id:id } ).then( function(user) {
               callback(null, user);
           }).catch( function( error ) {
@@ -59,11 +58,10 @@ db.connect(
     });
     function isAuthenticated(req, res, next) {
 		console.log( "path : " + req.path );
-		console.log( "user : " + req.user );
 		if ( req.user && req.isAuthenticated() ) {
+            console.log( "user : " + JSON.stringify(req.user) );
 			return next();
 		} else {
-			console.log(req.route);
 			if( req.xhr ) {
 				// ajax requests get a brief response
 				console.log( 'rejecting xhr request' );
@@ -162,20 +160,26 @@ db.connect(
     app.get('/admin', isAuthenticated, function(req, res) {
         db.find( 'mash', {"mash.type": "image"} ).then( function( images ) {
             db.find( 'mash', {"mash.type": "text"} ).then( function( texts ) {
-                res.render('admin', { title: "MASH Admin", images: images, texts: texts } );
+                db.find( 'display', { account: req.user.id } ).then( function( displays ) {
+                    res.render('admin', { title: "MASH Admin", account: req.user.id, images: images, texts: texts, displays: displays } );
+                } ).catch( function( error ) {
+                    res.render('error', { message: JSON.stringify( error ) } );
+                });
             }).catch( function( error ) {
-                res.render('error', { message: error } );
+                res.render('error', { message: JSON.stringify( error ) } );
             });
         }).catch( function( error ) {
-            res.render('error', { message: error } );
+            res.render('error', { message: JSON.stringify( error ) } );
         });
     });
-    app.get('/instance/:id', isAuthenticated, function(req, res) {
-        var id = req.param.id.unescape();
-        var instance = wsr.getInstance(server.ws, req.param.id );
-        res.render( 'instance', { instance: instance } );
+    app.get('/display/:id', isAuthenticated, function(req, res) {
+        var id = req.params.id;
+        db.findOne( 'display', { $and: [ { account: req.user.id }, { display: id } ] } ).then( function( response ) {
+            res.render( 'display', { display: response } );
+        }).catch( function( error ) {
+            res.render('error', { message: JSON.stringify( error ) } );
+        });
     });
-    
     //
     //
     //

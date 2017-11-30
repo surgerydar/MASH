@@ -5,10 +5,14 @@ html
         meta( name='viewport' content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0' )
     body
         #container
-            h1( style='text-align: center' ) MASH - Admin
-            h2( style='text-align: center' ) Instance
-            input#device-guid(type='text', name='guid' placeholder='display id',required, autofocus)
-            #device-details
+            a( href='/logout' style='position: absolute; top: 8px; right: 8px;') logout
+            h1() MASH - Admin
+            h2() Account #{account}
+            h2() Displays
+            .instance-list
+                include instance.pug
+                each display in displays
+                    +display( display )
             h2( style='text-align: center' ) Images
             .gallery#images
                 each image in images

@@ -69,12 +69,11 @@ void CompositeImage::addImage( QQuickItem *image ) {
     QSharedPointer<QQuickItemGrabResult> result = image->grabToImage();
     if ( result ) {
         connect(result.data(), &QQuickItemGrabResult::ready, [=]() {
+            qreal opacity = image->opacity();
             QMutexLocker locker(&this->m_guard);
             QPainter painter(&this->m_image);
-            //painter.setCompositionMode(QPainter::CompositionMode_DestinationOver);
-            //painter.setOpacity(.15);
             painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
-            painter.setOpacity(image->opacity());
+            painter.setOpacity(opacity);
             painter.drawImage(bounds,result->image());
             this->update();
         } );

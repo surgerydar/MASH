@@ -5,14 +5,24 @@ precision mediump float;
 uniform float time;
 uniform vec2 mouse;
 uniform vec2 resolution;
-uniform vec4 baseColour;
 
+uniform sampler2D src;
+uniform float offsetX;
+uniform float offsetY;
+uniform float imageMix;
 uniform float qt_Opacity;
 
 varying vec2 surfacePosition;
 uniform sampler2D src;
 varying vec2 texCoord;
 uniform float imageMix;
+
+vec2 distort( in vec2 p, in float offset ) {
+    p -= .5;
+    p *= offset + 1.;
+    p += .5;
+    return p;
+}
 
 uniform sampler2D noiseTexture;
 
@@ -63,15 +73,14 @@ float warp( in vec3 _st ) {
 }
 
 void main( void ) {
-
+    vec2 posn = gl_FragCoord.xy + vec2(offsetX,offsetY);
+    vec2 st = posn.xy/resolution.xy;
+    st.x *= resolution.x/resolution.y;
     vec2 p = (gl_FragCoord.xy / resolution.xy)*.01;
     float v = fbm(vec3(p, time*.001));
-    vec4 colour = vec4(v,v,v,1.);
-    vec2 offset = texCoord*mix(colour.rg,vec2(1.),imageMix);
-    if ( offset.x < 0. ) offset.x += 1.;
-    if ( offset.x > 1. ) offset.x -= 1.;
-    if ( offset.y < 0. ) offset.y += 1.;
-    if ( offset.y > 1. ) offset.y -= 1.;
+
+    vec2 distorted = distort( texCoord, v );
+    vec2 offset = texCoord*mix(distorted,vec2(1.),imageMix);
     vec4 image = texture2D( src, offset );
     vec3 finalColour = image.rgb;
     gl_FragColor = vec4(finalColour, image.a * imageMix ) * qt_Opacity;

@@ -66,6 +66,7 @@ void main( void ) {
 
     vec2 p = (gl_FragCoord.xy / resolution.xy)*.01;
     float v = fbm(vec3(p, time*.001));
+
     vec4 colour = vec4(v,v,v,1.);
     vec4 image = texture2D( src, texCoord );
     vec4 finalColour = colour + image;

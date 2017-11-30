@@ -4,7 +4,7 @@ import QtQuick.Controls 2.0
 Rectangle {
     id: container
     width: 800
-    height: 360
+    height: 300
     color: "lightgray"
     anchors.horizontalCenter: parent.horizontalCenter
     anchors.top: parent.top

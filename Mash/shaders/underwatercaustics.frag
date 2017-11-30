@@ -16,7 +16,7 @@ uniform float qt_Opacity;
 varying vec2 surfacePosition;
 
 const float TAU = 6.28318530718;
-const int MAX_ITER = 5;
+const int MAX_ITER = 2;
 
 void main( void ) {
     float gtime = time * .5+23.0;

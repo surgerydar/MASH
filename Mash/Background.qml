@@ -61,7 +61,7 @@ Item {
         property variant imageMix: 0.5
         property variant amplitude: appWindow.width / 16.
         property variant frequency: 60.
-        property variant baseColour: appWindow.backgroundColour
+        property variant baseColour: appWindow.effectColour
         property variant noiseTextureSize: Qt.size(noise.width, noise.height)
         //
         //

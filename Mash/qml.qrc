@@ -38,5 +38,9 @@
         <file>shaders/common.frag</file>
         <file>shaders/oiley-offset.frag</file>
         <file>RegisterDialog.qml</file>
+        <file>shaders/verticalbars-offset.frag</file>
+        <file>shaders/verticalbars.frag</file>
+        <file>shaders/horizontalbars-offset.frag</file>
+        <file>shaders/horizontalbars.frag</file>
     </qresource>
 </RCC>

@@ -70,7 +70,7 @@ Item {
             //properties: "imageMix"
             from: 0.
             to: 1.
-            duration: 1000 * 10
+            duration: Math.round(1000. * 10. * ( 1. / appWindow.globalSpeed ) )
             easing.type: Easing.InOutQuad
         }
         PauseAnimation {
@@ -82,7 +82,7 @@ Item {
             //properties: "imageMix"
             from: 1.
             to: .15
-            duration: 1000 * (5.*.85)
+            duration: Math.round(1000 * (5.*.85) * ( 1. / appWindow.globalSpeed ) )
             easing.type: Easing.InOutQuad;
         }
         ScriptAction {
@@ -92,11 +92,11 @@ Item {
         }
         NumberAnimation {
             target: effect
-            //properties: "imageMix,opacity"
-            properties: "imageMix"
+            properties: "imageMix,opacity"
+            //properties: "imageMix"
             from: .15
             to: 0.
-            duration: 1000 * (5.*.15)
+            duration: Math.round(1000 * (5.*.15) * ( 1. / appWindow.globalSpeed ) )
             easing.type: Easing.InOutQuad;
         }
         ScriptAction {

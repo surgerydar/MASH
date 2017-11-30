@@ -1,1 +1,24 @@
-h1= instance.instance
+mixin display(instance)
+    .instance-container
+        - var onlineClass = instance.connected ? 'online-indicator connected' : 'online-indicator'
+        div( class= onlineClass data-display= instance.display )
+        h1.instance-header()= instance.configuration.name
+        h2()= instance.display
+        label.instance-label( for='global-speed' ) Global Speed
+        - var globalSpeed = instance.configuration.globalSpeed * 100
+        input( type='range' name='global-speed' min='25' max='200' step='1' value= globalSpeed )
+        label.instance-label( for='effect-index' ) Effect
+        input( type='number' name='effect-index' min='0' max='5' value= instance.configuration.effect )
+        label.instance-label( for='effect-speed' ) Effect Speed
+        - var effectSpeed = instance.configuration.effectSpeed * 100
+        input( type='range' name='effect-speed' min='25' max='200' step='1' value= effectSpeed )
+        label.instance-label( for='effect-colour' ) Effect Colour
+        - var effectColour = typeof instance.configuration.effectColour === "string" ? instance.configuration.effectColour : rgb( instance.configuration.effectColour.r, instance.configuration.effectColour.g, instance.configuration.effectColour.b )
+        input( type='color' name='effect-colour' value= effectColour )
+        label.instance-label( for='text-colour' ) Text Colour
+        - var textColour = typeof instance.configuration.textColour === "string" ? instance.configuration.textColour : rgb( instance.configuration.textColour.r, instance.configuration.textColour.g, instance.configuration.textColour.b )
+        input( type='color' name='text-colour' value= textColour )
+        label.instance-label( for='tags' ) Tags
+        input( type='text' name='tags' placeholder='tags' value= instance.configuration.tags )
+        button( type='button' name='update-display' data-display= instance.display data-account= instance.account data-display-name= instance.configuration.name ) Update
+

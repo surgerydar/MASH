@@ -17,7 +17,7 @@ varying vec2 surfacePosition;
 varying vec2 texCoord;
 
 const float TAU = 6.28318530718;
-const int MAX_ITER = 5;
+const int MAX_ITER = 2;
 
 vec2 distort( in vec2 p, in float offset ) {
     p -= .5;

@@ -112,7 +112,13 @@ ApplicationWindow {
     //
     //
     //
-    NumberAnimation on globalTime { loops: Animation.Infinite; from: 0.; to: 10000.; duration: 5000000 }
+    NumberAnimation on globalTime {
+        id: globalTimer
+        loops: Animation.Infinite
+        from: 0.
+        to: 10000.
+        duration: 5000000
+    }
     //
     //
     //
@@ -268,7 +274,14 @@ ApplicationWindow {
                     //
                     //
                     console.log( "ERROR connecting display : " + command.error );
+                } else {
+                    if ( command.configuration ) {
+                        setConfiguration(command.configuration);
+                    }
                 }
+                break;
+            case 'updatedisplayconfiguration' :
+                setConfiguration(command.configuration);
                 break;
             case 'text' :
                 //instanciateMash( {type:"text", content:command.content} );
@@ -289,8 +302,8 @@ ApplicationWindow {
             case 'textcolour' :
                 textColour = command.colour;
                 break;
-            case 'backgroundcolour' :
-                backgroundColour = command.colour;
+            case 'effectcolour' :
+                effectColour = command.colour;
                 break;
             case 'textsource' :
                 textSource = command.source;
@@ -306,33 +319,62 @@ ApplicationWindow {
 
         }
     }
+    /*
+      configuration
+      */
     function getConfiguration() {
         return {
+            name: name,
             effect: currentShader,
             textColour: textColour,
-            backgroundColour: backgroundColour,
+            effectColour: effectColour,
+            globalSpeed: globalSpeed,
+            effectSpeed: effectSpeed,
+            tags: tags,
             textSource: textSource,
             imageSource: imageSource
         };
     }
     function setConfiguration( configuration ) {
-        currentShader = configuration.effect || currentShader;
+        name = configuration.name || name;
+        //nextShader = currentShader = configuration.effect || currentShader;
+        nextShader = configuration.effect !== undefined ? configuration.effect : currentShader;
         if ( configuration.textColour ) {
-            textColour = Qt.rgba(
-                        configuration.textColour["r"] || 1,
-                        configuration.textColour["g"] || 0,
-                        configuration.textColour["b"] || 0,
-                        configuration.textColour["a"] || 1);
+            if ( typeof configuration.textColour === "string" ) {
+                textColour = configuration.textColour;
+            } else {
+                textColour = Qt.rgba(
+                            configuration.textColour["r"] || 1,
+                            configuration.textColour["g"] || 0,
+                            configuration.textColour["b"] || 0,
+                            configuration.textColour["a"] || 1);
+            }
         }
-        if ( configuration.backgroundColour ) {
-            backgroundColour = Qt.rgba(
-                        configuration.backgroundColour["r"] || 0,
-                        configuration.backgroundColour["g"] || 0,
-                        configuration.backgroundColour["b"] || 0,
-                        configuration.backgroundColour["a"] || 1);
+        if ( configuration.effectColour ) {
+            if ( typeof configuration.effectColour === "string" ) {
+                effectColour = configuration.effectColour;
+            } else {
+                effectColour = Qt.rgba(
+                            configuration.effectColour["r"] || 0,
+                            configuration.effectColour["g"] || 0,
+                            configuration.effectColour["b"] || 0,
+                            configuration.effectColour["a"] || 1);
+            }
         }
+        globalSpeed = configuration.globalSpeed || globalSpeed;
+        effectSpeed = configuration.effectSpeed || effectSpeed;
+        tags = configuration.tags || tags;
         textSource = configuration.textSource || textSource;
         imageSource = configuration.imageSource || imageSource;
+        //
+        //
+        //
+        var duration = Math.round(5000000*(1./effectSpeed));
+        if ( duration !== globalTimer.duration ) {
+            console.log( 'reseting global timer' );
+            globalTimer.duration = duration;
+            globalTimer.restart();
+        }
     }
     //
     //
@@ -359,7 +401,7 @@ ApplicationWindow {
         //
         //
         //
-        interval: 1000*9
+        interval: Math.round(1000*9* ( 1. / globalSpeed ) )
         repeat: true
         onTriggered: {
             var query;
@@ -382,7 +424,7 @@ ApplicationWindow {
         //
         //
         //
-        interval: 1000*16
+        interval: Math.round(1000*16* ( 1. / globalSpeed ) )
         repeat: true
         onTriggered: {
             if ( textSource.length > 0 ) {
@@ -399,8 +441,8 @@ ApplicationWindow {
         if ( Number.NaN === index ) return; // invalid number may come from 'direct' control
         if ( index >= shaders.length ) index = 0;
         if ( index < 0 ) index = shaders.length - 1;
-        dynamicBackground.shader = shaders[ index ].background;
         currentShader = index;
+        dynamicBackground.shader = shaders[ index ].background;
         //
         // TODO: set live mash shader
         //
@@ -415,7 +457,7 @@ ApplicationWindow {
     //
     //
     function registerDisplay( accountKey ) {
-        webSocketChannel.send( { command: 'registerdisplay', display: instance, account: accountKey } );
+        webSocketChannel.send( { command: 'registerdisplay', display: instance, account: accountKey, configuration: getConfiguration() } );
     }
 
     function connectDisplay() {
@@ -432,6 +474,12 @@ ApplicationWindow {
     //
     //
     //
+    Shortcut {
+        sequence: "Ctrl+X"
+        onActivated: {
+            Qt.exit(0);
+        }
+    }
     Shortcut {
         sequence: "Ctrl+F"
         onActivated: {
@@ -488,6 +536,9 @@ ApplicationWindow {
             } catch( error ) {
                 console.log( 'error restoring configuration : ' + error );
             }
+        } else {
+            Settings.set("configuration", JSON.stringify(getConfiguration()));
+            Settings.save();
         }
         //
         // Load database
@@ -548,23 +599,27 @@ ApplicationWindow {
     //
     property variant shaders: [
         { background: "qrc:shaders/underwatercaustics.frag", mash: "qrc:shaders/underwatercaustics-offset.frag" },
-        { background: "qrc:shaders/fuzzy.frag", mash: "qrc:shaders/fuzzy-offset.frag" },
-        { background: "qrc:shaders/clouds.frag", mash: "qrc:shaders/clouds-offset.frag" },
-        { background: "qrc:shaders/colourflow.frag", mash: "qrc:shaders/colourflow-offset.frag" },
-        { background: "qrc:shaders/grayflow.frag", mash: "qrc:shaders/grayflow-offset.frag" },
         { background: "qrc:shaders/dynamicflow.frag", mash: "qrc:shaders/dynamicflow-offset.frag" },
+        { background: "qrc:shaders/oiley.frag", mash: "qrc:shaders/oiley-offset.frag" },
         { background: "qrc:shaders/optimised-caustics.frag", mash: "qrc:shaders/grayflow-offset.frag" },
-        { background: "qrc:shaders/smokey.frag", mash: "qrc:shaders/grayflow-offset.frag" },
-        { background: "qrc:shaders/oiley.frag", mash: "qrc:shaders/oiley-offset.frag" }
+        { background: "qrc:shaders/verticalbars.frag", mash: "qrc:shaders/verticalbars-offset.frag" },
+        { background: "qrc:shaders/horizontalbars.frag", mash: "qrc:shaders/horizontalbars-offset.frag" }
     ]
-    property int currentShader: 6//4
-    property int nextShader: 6
     property real globalTime: 0
     property alias cumulative: background
+    /*
+      configuration
+      */
+    property int currentShader: 6//4
+    property int nextShader: 6
     property color textColour: "red"
-    property color backgroundColour: "white"
+    property color effectColour: "white"
+    property real globalSpeed: 1.
+    property real effectSpeed: 1.
     property string imageSource: ""
     property string textSource: ""
+    property string tags: ""
+    property string name: "Unnamed"
     property string instance: ""
     property string account: ""
  }

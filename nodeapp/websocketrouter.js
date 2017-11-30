@@ -65,14 +65,14 @@ WebSocketRouter.prototype.message = function( wss, ws, message ) {
     }
 }
 
-WebSocketRouter.prototype.sendcommand = function( wss, guid, account, command ) {
+WebSocketRouter.prototype.sendcommand = function( wss, display, account, command ) {
     //
     // send to specific instance
     //
     var message = JSON.stringify( command );
-    console.log('WebSocketRouter.send:' + message + ' to ' + guid);
+    console.log('WebSocketRouter.send:' + message + ' to ' + display);
     wss.clients.forEach(function(client) {
-        if (client.mash && client.mash.guid === guid && client.mash.account === account && client.readyState === WebSocket.OPEN) {
+        if (client.mash && client.mash.display === display && client.mash.account === account && client.readyState === WebSocket.OPEN) {
             client.send(message);
         }
     });
