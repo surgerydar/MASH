@@ -130,6 +130,51 @@ db.connect(
             res.json( formatResponse( null, 'ERROR', error ) );
         });
     });
+    app.get('/mash/:account/:type/:tags/:pagenumber/:pagesize/:format', function(req, res) {
+        // all mashes posted to account, result is pagenumber with pagesize
+        // page count is returned in result
+        console.log( 'get mash for account : ' + req.params.account );
+        //
+        // build query
+        //
+        var query = { account: '{' + req.params.account + '}' };
+        var type = req.params.type;
+        if ( type !== 'all' ) {
+            query['mash.type'] = type;
+        }
+        var tags = req.params.tags;
+        if ( tags !== 'all' ) {
+            tags = tags.split(',');
+            query['mash.tags'] = { $all: tags };
+        }
+        //
+        // count total matches
+        //
+        db.count( 'mash', query ).then( function( count ) {
+            console.log( 'found ' + count + ' entries of type ' + type );
+            var pagenumber = parseInt(req.params.pagenumber);
+            var pagesize = parseInt(req.params.pagesize);
+            var offset = pagenumber * pagesize;
+            db.find( 'mash', query, { _id: 0 }, offset, pagesize ).then( function( entries ) {
+                var response = {
+                    tags: tags || [],
+                    count: count,
+                    pagenumber: pagenumber,
+                    pagesize: pagesize,
+                    entries: entries
+                };
+                if ( req.params.format === 'html' ) {
+                    res.render('mashpage', { search: response });
+                } else {
+                    res.json( formatResponse( response, 'OK' ) );
+                }
+            }).catch( function( error ) {
+                res.json( formatResponse( null, 'ERROR', error ) );
+            });
+        }).catch( function( error ) {
+            res.json( formatResponse( null, 'ERROR', error ) );
+        });
+    });
     app.get('/s/:id/:image', function(req, res) {
         let redirUrl = 'https://dl.dropboxusercontent.com:443/s/' + req.params.id + '/' + req.params.image;
         if ( req.query.width && req.query.height ) {
@@ -208,7 +253,8 @@ db.connect(
         // store mash
         console.log( 'post direct : ' + JSON.stringify(req.body) );
         try {
-            wsr.send(server.ws, req.body.instance, req.body.command);
+            //wsr.send(server.ws, req.body.instance, req.body.command);
+            wsr.sendcommand( server.ws, req.body.instance, req.body.account, req.body.command );
             res.json( {status: 'OK'} );
         } catch( error ) {
             res.json( {status: 'ERROR', message: error } );

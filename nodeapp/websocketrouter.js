@@ -72,7 +72,13 @@ WebSocketRouter.prototype.sendcommand = function( wss, display, account, command
     var message = JSON.stringify( command );
     console.log('WebSocketRouter.send:' + message + ' to ' + display);
     wss.clients.forEach(function(client) {
+        if ( client.mash ) {
+            console.log( JSON.stringify(client.mash) );
+        } else {
+            console.log( "no mash" );
+        }
         if (client.mash && client.mash.display === display && client.mash.account === account && client.readyState === WebSocket.OPEN) {
+            console.log('WebSocketRouter.sending:' + message + ' to ' + display);
             client.send(message);
         }
     });

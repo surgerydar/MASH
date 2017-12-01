@@ -100,7 +100,7 @@ DisplayControl.prototype.configuredisplay = function( wss, ws, command ) {
     //
     process.nextTick(function(){ 
         _db.findOne( 'display', { $and : [ { display: command.display }, { account: command.account } ] } ).then( function( response ) { 
-            _wsr.sendcommand( command.display, command.account, command );
+            _wsr.sendcommand( wss, command.display, command.account, command );
             command.status = 'OK';
             ws.send(JSON.stringify(command));
         }).catch( function( error ) {

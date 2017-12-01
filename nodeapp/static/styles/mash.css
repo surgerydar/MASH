@@ -122,6 +122,12 @@ input[type='search']:focus, input[type='text']:focus, input[type='password']:foc
     outline: none;
 }
 
+input[type='radio'] {
+    display:inline-block;
+    width: 64px;
+    height: 64px;
+}
+
 input[type='range'] {
 	-webkit-appearance: none;
 	min-width: 96px;
@@ -365,5 +371,24 @@ nav.list_pagination {
 }
 .online-indicator.connected {
     background-color: limegreen;    
+}
+
+.mash-list {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-around;
+}
+
+.mash-list-item {
+    position: relative;
+    flex: 0 0 0;
+    height: 300px;
+    width: 300px;
+    min-width: 300px;
+    padding: 8px;
+    margin: 4px;
+    text-align: center;
+    background-color: rgb( 121,121,121 );
 }
 

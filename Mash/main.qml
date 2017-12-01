@@ -446,12 +446,14 @@ ApplicationWindow {
         //
         // TODO: set live mash shader
         //
+        /*
         for ( var i = 0; i < mashContainer.children.length; ++i ) {
             var child = mashContainer.children[i];
             if ( child.shader !== undefined ) {
                 child.shader = shaders[ index ].mash;
             }
         }
+        */
     }
     //
     //
@@ -506,7 +508,7 @@ ApplicationWindow {
     onWidthChanged: {
         Layout.setup({x:0.,y:0.,width:width,height:height});
     }
-    onFrameSwapped: {
+    onBeforeSynchronizing: {
         if ( currentShader !== nextShader ) {
             setShader(nextShader);
         }
@@ -515,6 +517,7 @@ ApplicationWindow {
     //
     //
     Component.onCompleted: {
+
         //
         // Load settings
         //

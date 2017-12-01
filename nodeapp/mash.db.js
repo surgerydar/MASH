@@ -110,11 +110,11 @@ Db.prototype.insert = function( collection, data ) {
 		}
 	});
 }
-Db.prototype.find = function( collection, query, projection ) {
+Db.prototype.find = function( collection, query, projection, offset, limit ) {
 	var db = this.db;
 	return new Promise( function( resolve, reject ) {
 		try {
-			db.collection( collection ).find( query, projection ).toArray( function(err,result) {
+			db.collection( collection ).find( query, projection ).skip(offset||0).limit(limit||0).toArray( function(err,result) {
 				if ( err ) {
 					reject( err );
 				} else {
@@ -164,11 +164,29 @@ Db.prototype.update = function( collection, query, update, options ) {
 	});
 }
 
-Db.prototype.remove = function( collection, query, update, options ) {
+Db.prototype.remove = function( collection, query ) {
 	var db = this.db;
 	return new Promise( function( resolve, reject ) {
 		try {
 			db.collection( collection ).remove( query, function(err,result) {
+				if ( err ) {
+					reject( err );
+				} else {
+					resolve( result );
+				}
+			});
+		} catch( err ) {
+			reject( err );
+		}
+	});
+}
+
+Db.prototype.count = function( collection, query, options ) {
+	var db = this.db;
+	return new Promise( function( resolve, reject ) {
+		try {
+            options = options | {};
+			db.collection( collection ).count( query, options, function(err,result) {
 				if ( err ) {
 					reject( err );
 				} else {
