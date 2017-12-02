@@ -201,6 +201,18 @@ var utils = {
     //
     function hookdisplay( display ) {
         //
+        //
+        //
+        var displayName = display.querySelector('.instance-header');
+        if ( displayName ) {
+            displayName.onclick = function() {
+                var name = prompt('Rename Display', displayName.innerHTML);
+                if (name != null) {
+                    displayName.innerHTML = name;
+                }            
+            };
+        }
+        //
         // hook online indicator / refresh button
         //
         var indicator = display.querySelector('div[class*="online-indicator"]');
@@ -234,7 +246,8 @@ var utils = {
                 var deviceId = update.getAttribute('data-display');
                 var account = update.getAttribute('data-account');
                 var configuration = {
-                    name: update.getAttribute('data-display-name'),
+                    //name: update.getAttribute('data-display-name'),
+                    name: display.querySelector('.instance-header').innerHTML,
                     effect: Math.max( 0, Math.min( 5, parseInt(display.querySelector('input[name="effect-index"]').value) ) ),
                     textColour: display.querySelector('input[name="text-colour"]').value,
                     effectColour: display.querySelector('input[name="effect-colour"]').value,
@@ -328,29 +341,143 @@ var utils = {
         })(displays[ i ]);
     }
     //
-    // hook all delete buttons
+    // load media
     //
-    var deleteButtons = d.querySelectorAll('.delete');
-    for ( var i = 0; i < deleteButtons.length; ++i ) {
-        (function(item){
-            item.onclick = function() {
-                if ( confirm( 'are you sure you want to delete this item?' ) ) {
-                    var endpoint = '/mash/' + item.getAttribute('data-id');
-                    rest.delete( endpoint, {
-                        onloadend : function( evt ) {
-                            //
-                            // remove item from list
-                            //
-                            var mash = item.parentNode;
-                            mash.parentNode.removeChild(mash);
-                        },
-                        onerror : function( evt ) {
-                            alert( 'error delting item' );
+    var mashContainer = d.querySelector('.mash-container');
+    if ( mashContainer ) {
+        function hookMash( container ) {
+            console.log( 'hooking mash-container' );
+            var mashList = container.querySelector('.mash-list');
+            if ( mashList ) {
+                var count = parseInt(mashList.getAttribute( 'data-count' ));
+                var pageNumber = parseInt(mashList.getAttribute( 'data-pagenumber' ));
+                var pageSize = parseInt(mashList.getAttribute( 'data-pagesize' ));
+                var previousButton = container.querySelector( 'button[name="previous-page"]' );
+                var nextButton = container.querySelector( 'button[name="next-page"]' );
+                var searchField = container.querySelector('#mash-search');
+                console.log( 'count:' + count + ' pagenumber:' + pageNumber + ' pagesize:' + pageSize );
+                function getSearchTags() {
+                    if ( searchField ) {
+                        if ( searchField.value.length > 0 ) {
+                            var tags = searchField.value;
+                            tags = tags.split(',');
+                            if ( tags.length > 0 ) {
+                                var tagString = '';
+                                for ( var tag = 0; tag < tags.length; ++tag ) {
+                                    tagString += tags[ tag ].trim();
+                                    if ( tag < tags.length - 1 ) {
+                                        tagString += ',';
+                                    }
+                                }
+                                return tagString;
+                            }
                         }
-                    });
+                    }
+                    return 'all';
                 }
-            };   
-        })( deleteButtons[ i ] );
+                if ( searchField ) {
+                    searchField.onsearch = function() {
+                        loadMash(account,'all',getSearchTags(), 0, pageSize );
+                    }
+                }
+                //
+                //
+                //
+                if ( previousButton ) {
+                    previousButton.onclick = function() {
+                        loadMash(account,'all',getSearchTags(), pageNumber - 1, pageSize );
+                    };
+                }
+                if ( nextButton ) {
+                    nextButton.onclick = function() {
+                        loadMash(account,'all',getSearchTags(), pageNumber + 1, pageSize );
+                    };
+                }
+                //
+                //
+                //
+                var mashes = mashList.querySelectorAll('.mash-list-item');
+                for ( var i = 0; i < mashes.length; ++i ) {
+                    (function(mash){
+                        //
+                        // hook delete button
+                        //
+                        var deleteButton = mash.querySelector('.delete');
+                        if ( deleteButton ) {
+                            deleteButton.onclick = function() {
+                                if ( confirm( 'are you sure you want to delete this item?' ) ) {
+                                    var endpoint = '/mash/' + mash.getAttribute('data-id');
+                                    rest.delete( endpoint, {
+                                        onloadend : function( evt ) {
+                                            //
+                                            // remove item from list
+                                            //
+                                            mash.parentNode.removeChild(mash);
+                                        },
+                                        onerror : function( evt ) {
+                                            alert( 'error delting item' );
+                                        }
+                                    });
+                                }
+                            };   
+                        }
+                        //
+                        // hook tag button
+                        //
+                        var tagButton = mash.querySelector('button[name="tag-item"]');
+                        if ( tagButton ) {
+                            tagButton.onclick = function() {
+                                var endpoint = '/mash/' + mash.getAttribute('data-id');
+                                var tags = mash.querySelector('input[name="tags"]').value;
+                                tags = tags.length > 0 ? tags.split(',') : [];
+                                for ( var tag = 0; tag < tags.length; ++tag ) {
+                                    tags[ tag ] = tags[ tag ].trim();
+                                }
+                                var data = {
+                                    'mash.tags': tags
+                                };
+                                rest.put( endpoint, data, {
+                                    onloadend : function( evt ) {
+                                        //
+                                        // remove item from list
+                                        //
+                                    },
+                                    onerror : function( evt ) {
+                                        alert( 'error updating item' );
+                                    }
+                                });
+                            };   
+                        }
+
+                   })( mashes[ i ] );
+                }
+            }
+        }
+        //
+        //
+        //
+        function loadMash( account, type, tags, pagenumber, pagesize ) {
+            var endpoint = '/mash/' + account.substring( 1, account.length -1 ) + '/' + type + '/' + tags + '/' + pagenumber + '/' + pagesize + '/html';
+            rest.get(endpoint, {
+                onloadend: function(evt) {
+                    //display.inner
+                    var response = rest.getresponse(evt);
+                    var doc = new DOMParser().parseFromString(response, "text/html");
+                    if ( doc ) {
+                        var container = doc.querySelector('.mash-container');
+                        if ( container ) {
+                            mashContainer.innerHTML = container.innerHTML;
+                            hookMash( mashContainer );
+                        }
+                    }
+                }
+            });
+        }
+        //
+        // load mashes
+        //
+        var account = mashContainer.getAttribute( 'data-account' );
+        loadMash( account, 'all', 'all', 0, 16 );
     }
     //
     //

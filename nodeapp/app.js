@@ -104,17 +104,31 @@ db.connect(
     // mash
     //
     app.post('/mash', jsonParser, function (req, res) {
-        // store mash
-        db.putMash( req.body ).then( function( response ) {
+        var account = req.body.account;
+        db.findOne( { account: account } ).then( function( response ) {
+            // store mash
+            db.putMash( req.body ).then( function( response ) {
+                res.json( {status: 'OK'} );
+            } ).catch( function( error ) {
+                res.json( {status: 'ERROR', message: error } );
+            });
+        }).catch( function( error ) {
+            res.json( {status: 'ERROR', message: 'invalid account' } );
+        });
+    });
+    app.put('/mash/:id', isAuthenticated, jsonParser, function (req, res) {
+        console.log( 'put mash ' + req.params.id );
+        var _id = db.ObjectId(req.params.id);
+        db.update( 'mash', { _id: _id }, { $set : req.body } ).then( function( response ) {
             res.json( {status: 'OK'} );
-        } ).catch( function( error ) {
+        }).catch( function( error ) {
             res.json( {status: 'ERROR', message: error } );
         });
     });
-    app.delete('/mash/:id', function (req, res) {
+    app.delete('/mash/:id', isAuthenticated, function (req, res) { // only accessable from admin interface
         // remove mash
         console.log( 'deleting mash : ' + req.params.id );
-        let _id = db.ObjectId(req.params.id);
+        var _id = db.ObjectId(req.params.id);
         db.remove( 'mash',  { _id: _id } ).then( function( response ) {
             res.json( {status: 'OK'} );
         } ).catch( function( error ) {
@@ -130,8 +144,26 @@ db.connect(
             res.json( formatResponse( null, 'ERROR', error ) );
         });
     });
+    app.get('/mash/:account/:tags', function(req, res) {
+        // all mashes posted to account with optional tags
+        console.log( 'get mash for account : ' + req.params.account );
+        //
+        // build query
+        //
+        var query = { account: '{' + req.params.account + '}' };
+        var tags = req.params.tags;
+        if ( tags !== 'all' ) {
+            tags = tags.split(',');
+            query['mash.tags'] = { $all: tags };
+        }
+        db.find( 'mash', query ).then( function( response ) {
+            res.json( formatResponse( response, 'OK' ) );
+        }).catch( function( error ) {
+            res.json( formatResponse( null, 'ERROR', error ) );
+        });
+    });
     app.get('/mash/:account/:type/:tags/:pagenumber/:pagesize/:format', function(req, res) {
-        // all mashes posted to account, result is pagenumber with pagesize
+        // all mashes posted to account with optional tags, result is pagenumber with pagesize
         // page count is returned in result
         console.log( 'get mash for account : ' + req.params.account );
         //
@@ -155,9 +187,9 @@ db.connect(
             var pagenumber = parseInt(req.params.pagenumber);
             var pagesize = parseInt(req.params.pagesize);
             var offset = pagenumber * pagesize;
-            db.find( 'mash', query, { _id: 0 }, offset, pagesize ).then( function( entries ) {
+            db.find( 'mash', query, {}, offset, pagesize ).then( function( entries ) {
                 var response = {
-                    tags: tags || [],
+                    tags: tags === 'all' ?  [] : tags,
                     count: count,
                     pagenumber: pagenumber,
                     pagesize: pagesize,
@@ -252,13 +284,17 @@ db.connect(
     app.post('/direct', jsonParser, function (req, res) {
         // store mash
         console.log( 'post direct : ' + JSON.stringify(req.body) );
-        try {
-            //wsr.send(server.ws, req.body.instance, req.body.command);
-            wsr.sendcommand( server.ws, req.body.instance, req.body.account, req.body.command );
-            res.json( {status: 'OK'} );
-        } catch( error ) {
-            res.json( {status: 'ERROR', message: error } );
-        }
+        var account = '{' + req.body.account + '}';
+        db.findOne( { account: account } ).then( function( response ) {
+            try {
+                wsr.sendcommand( server.ws, req.body.instance, req.body.account, req.body.command );
+                res.json( {status: 'OK'} );
+            } catch( error ) {
+                res.json( {status: 'ERROR', message: error } );
+            }
+        }).catch( function( error ) {
+            res.json( {status: 'ERROR', message: 'invalid account' } );
+        });
     });
     //
     // create server

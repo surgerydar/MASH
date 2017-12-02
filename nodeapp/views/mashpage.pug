@@ -1,45 +1,34 @@
-html
-    head
-        title= title
-        link(rel='stylesheet', href='/styles/mash.css')
-        meta( name='viewport' content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0' )
-    body
-        #container
-            a( href='/logout' style='position: absolute; top: 8px; right: 8px;') logout
-            h1() MASH - Admin
-            h2() Media
-            - var searchTags = Array.isArray(search.tags) ? search.tags.join() : '';
-            - var previousPage = search.pagenumber - 1;
-            - var nextPage = search.pagenumber + 1;
-            - var hasPrevious = previousPage >= 0;
-            - var hasNext = nextPage * search.pagesize < search.count
-            - var previousUrl = 'location="http://mash.soda.co.uk/mash/bb8fe4c1-683e-473e-ab64-69f479555d6c/all/' + searchTags +'/' + previousPage + '/' + search.pagesize + '/html"';
-            - var nextUrl = 'location="http://mash.soda.co.uk/mash/bb8fe4c1-683e-473e-ab64-69f479555d6c/all/' + searchTags +'/' + nextPage + '/' + search.pagesize + '/html"';
-            script.
-                function search() {
-                    var field = document.querySelector('')
-                }
-            nav( style='display: flex;')
-                if hasPrevious
-                    button( style='margin: 8px; align-self: center;' name='previous-page' data-tags= searchTags data-pagenumber= previousPage data-pagesize= search.pagesize onclick= previousUrl ) <
-                input( id='mash-search' style='margin: 8px; align-self: center;' type='search' value= searchTags )
-                if hasNext
-                    button( style='margin: 8px; align-self: center;' name='next-page' data-tags= searchTags data-pagenumber= nextPage data-pagesize= search.pagesize onclick= nextUrl ) >
-            .mash-list( data-count= search.count data-pagenumber= search.pagenumber data-pagesize= search.pagesize )          .
-                 each entry in search.entries
-                    if entry
-                       - var mash = entry.mash
-                        if mash
-                            - var isImage = mash.type === 'image';
-                            .mash-list-item
-                                if isImage
-                                    - var url = mash.content.trim().replace('https://dl.dropboxusercontent.com:443','http://mash.soda.co.uk') + '?width=128&height=128';
-                                    .thumbnail
-                                        img( src= url )
-                                else
-                                    - var text = mash.content.trim();
-                                    .thumbnail= text
-                                - var tags = mash.tags.join();
-                                input( type='text' name='tags' value= tags )
-                                button( name='tag-item' data-id= entry._id ) tag
-                                .delete( data-id= entry._id )
+.mash-container
+    - var hasPrevious = search.pagenumber > 0;
+    - var hasNext = ( search.pagenumber + 1 ) * search.pagesize < search.count;
+    - 
+        var searchTags = "";
+        for ( var i = 0; i < search.tags.length; ++i ) {
+            searchTags += search.tags[ i ];
+            if ( i < search.tags.length - 1 ) searchTags += ',';
+        }
+    nav( style='display: flex; align-items: start;')
+        if hasPrevious
+            button( style='margin: 8px; align-self: center; width: 64px;' name='previous-page' ) <
+        input( id='mash-search' style='margin: 8px; align-self: center;' type='search' placeholder='tag,tag,...' value= searchTags )
+        if hasNext
+            button( style='margin: 8px; align-self: center; width: 64px;' name='next-page' ) >
+    .mash-list( data-count= search.count data-pagenumber= search.pagenumber data-pagesize= search.pagesize )
+        each entry in search.entries
+            if entry
+                - var mash = entry.mash
+                if mash
+                    - var isImage = mash.type === 'image';
+                    .mash-list-item(data-id= entry._id)
+                        if isImage
+                            - var url = mash.content.trim().replace('https://dl.dropboxusercontent.com:443','http://mash.soda.co.uk') + '?width=128&height=128';
+                            .thumbnail
+                                img( src= url )
+                        else
+                            - var text = mash.content.trim();
+                            .thumbnail= text
+                        - var tags = mash.tags.join();
+                        input( type='text' name='tags' value= tags )
+                        button( name='tag-item' ) tag
+                        .delete
+                        

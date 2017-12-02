@@ -328,6 +328,7 @@ nav.list_pagination {
     height: 816px;
     display: flex;
     flex-direction: row;
+    justify-content: space-around;
     overflow-x: auto;
     overflow-y: hidden;
     background-color: darkgray;
@@ -373,6 +374,10 @@ nav.list_pagination {
     background-color: limegreen;    
 }
 
+.mash-container {
+    width: 100%;
+}
+
 .mash-list {
     display: flex;
     flex-direction: row;
@@ -387,7 +392,7 @@ nav.list_pagination {
     width: 300px;
     min-width: 300px;
     padding: 8px;
-    margin: 4px;
+    margin: 2px;
     text-align: center;
     background-color: rgb( 121,121,121 );
 }

@@ -40,16 +40,16 @@ Db.prototype.connect = function( host, port, database, username, password ) {
 Db.prototype.putMash = function( data ) {
     var db = this.db;
     return new Promise( function( resolve, reject ) {
-        if ( false ) {/*data.mash === undefined || 
+        if (    data.mash === undefined ||   
                 data.mash.type === undefined || 
                 data.mash.content === undefined || 
-                data.mash.content.length() === 0 ||  
                 data.mash.type.length() === 0 || 
-                !( data.mash.type === "text" || data.mash.type === "image" ) ) {*/
+                data.mash.content.length() === 0 ||  
+                !( data.mash.type === "text" || data.mash.type === "image" ) ) {
             reject('invalid mash')
         } else {
             try {
-                data.time = Date.now();
+                data.time = Date.now(); // time stamp
                 if ( data.content ) {
                     data.content = data.content.trim(); // trim whitespace
                 }

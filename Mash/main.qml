@@ -221,14 +221,28 @@ ApplicationWindow {
                 console.log( 'WebChannel : adding ' + result.length + ' entries' );
                 //Database.addMany(result);
                 Database.sync(result);
+            } else {
+                console.log( 'no results from database update')
             }
+        }
+        onError: {
+            console.log( 'error updating database : ' + error );
         }
         //
         //
         //
         function update() {
             //get( "mash", [ JSON.stringify(Math.round(Database.latest))] );
-            get( "mash", [ "0" ] );
+            //get( "mash", [ "0" ] );
+            if ( account.length > 0 ) {
+                var param = [ account.substring(1,account.length-1) ];
+                if ( tags ) {
+                    param.push(tags);
+                } else {
+                    param.push('all');
+                }
+                get( "mash", param );
+            }
         }
     }
     //
@@ -363,17 +377,24 @@ ApplicationWindow {
         }
         globalSpeed = configuration.globalSpeed || globalSpeed;
         effectSpeed = configuration.effectSpeed || effectSpeed;
-        tags = configuration.tags || tags;
+        var previousTags = tags;
+        tags = configuration.tags !== undefined ?  configuration.tags : tags;
         textSource = configuration.textSource || textSource;
         imageSource = configuration.imageSource || imageSource;
         //
-        //
+        // reset timer
         //
         var duration = Math.round(5000000*(1./effectSpeed));
         if ( duration !== globalTimer.duration ) {
             console.log( 'reseting global timer' );
             globalTimer.duration = duration;
             globalTimer.restart();
+        }
+        //
+        // request update
+        //
+        if ( previousTags !== tags ) {
+            mashChannel.update();
         }
     }
     //
@@ -613,8 +634,8 @@ ApplicationWindow {
     /*
       configuration
       */
-    property int currentShader: 6//4
-    property int nextShader: 6
+    property int currentShader: 1
+    property int nextShader: 1
     property color textColour: "red"
     property color effectColour: "white"
     property real globalSpeed: 1.

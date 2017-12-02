@@ -2,7 +2,7 @@ mixin display(instance)
     .instance-container
         - var onlineClass = instance.connected ? 'online-indicator connected' : 'online-indicator'
         div( class= onlineClass data-display= instance.display )
-        h1.instance-header()= instance.configuration.name
+        h1.instance-header( data-name= instance.configuration.name )= instance.configuration.name
         h2()= instance.display
         label.instance-label( for='global-speed' ) Global Speed
         - var globalSpeed = instance.configuration.globalSpeed * 100

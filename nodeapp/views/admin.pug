@@ -13,18 +13,6 @@ html
                 include instance.pug
                 each display in displays
                     +display( display )
-            h2( style='text-align: center' ) Images
-            .gallery#images
-                each image in images
-                    if image
-                        .thumbnail
-                            - var url = image.mash.content.trim().replace('https://dl.dropboxusercontent.com:443','http://mash.soda.co.uk') + '?width=128&height=128';
-                            img( src= url )
-                            .delete( data-id= image._id )
-            h2( style='text-align: center' ) Text
-            .gallery#texts
-                each text in texts
-                    if text
-                        .thumbnail= text.mash.content
-                            .delete( data-id= text._id )
+            h2( style='text-align: center' ) Media
+            .mash-container( data-account= account )
         script(src='/scripts/mash.js')
