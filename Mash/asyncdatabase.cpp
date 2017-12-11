@@ -288,11 +288,17 @@ void AsyncDatabase::convertDocumentToMash( QVariantMap& document, QVariantMap& m
         if ( _mash.contains("source") ) {
             mash["source"] = _mash["source"];
         }
+        if ( _mash.contains("tags") ) {
+            mash["tags"] = _mash["tags"].toList();
+        }
     } else {
         mash["type"] = document["type"];
         mash["content"] = document["content"];
         if ( document.contains("source") ) {
             mash["source"] = document["source"];
+        }
+        if ( document.contains("tags") ) {
+            mash["tags"] = document["tags"].toList();
         }
     }
 }
@@ -346,9 +352,44 @@ void AsyncDatabase::__sort(QList<QVariantMap>& list,QVariantMap& s) {
 
 bool AsyncDatabase::_match( QVariantMap& object, QVariantMap& query ) {
     for ( QVariantMap::iterator it = query.begin(); it != query.end(); ++it ) {
-        if ( !object.contains(it.key()) || object[ it.key() ] != query[ it.key() ] ) return false;
+        if ( query[ it.key() ].type() == QVariant::List  ) { // $and | $or
+            qDebug() << "matching list : " << it.key();
+            if ( it.key().startsWith("$") ) { // operator
+                QVariantList array = query[ it.key() ].toList();
+                if ( !_matchList( object, it.key(), array ) ) return false;
+            } else { // TODO: could be array
+
+            }
+        } else if ( object.contains(it.key()) ) {
+            if ( object[ it.key() ].type() == QVariant::List ) {
+                QVariantList array = object[ it.key() ].toList();
+                for ( int i = 0; i < array.length(); ++i ) {
+                    if ( array[ i ] != query[ it.key() ] ) return false;
+                }
+            } else if( object[ it.key() ] != query[ it.key() ] ) {
+                return false;
+            }
+        } else {
+            return false;
+        }
     }
     return true;
+}
+
+bool AsyncDatabase::_matchList( QVariantMap& object, const QString& selector, QVariantList& list ) {
+    if ( selector == "$and" ) {
+        for ( int i = 0; i < list.length(); ++i ) {
+            QVariantMap map = list[ i ].toMap();
+            if ( !_match( object, map) ) return false;
+        }
+        return true;
+    } else if ( selector == "$or" ) {
+        for ( int i = 0; i < list.length(); ++i ) {
+            QVariantMap map = list[ i ].toMap();
+            if ( !_match( object, map) ) return true;
+        }
+    }
+    return false;
 }
 
 void AsyncDatabase::_update( QVariantMap& object, QVariantMap& update ) {

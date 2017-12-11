@@ -344,6 +344,7 @@ ApplicationWindow {
             effectColour: effectColour,
             globalSpeed: globalSpeed,
             effectSpeed: effectSpeed,
+            imageFrequency: imageFrequency,
             tags: tags,
             textSource: textSource,
             imageSource: imageSource
@@ -377,6 +378,7 @@ ApplicationWindow {
         }
         globalSpeed = configuration.globalSpeed || globalSpeed;
         effectSpeed = configuration.effectSpeed || effectSpeed;
+        imageFrequency = configuration.imageFrequency || imageFrequency;
         var previousTags = tags;
         tags = configuration.tags !== undefined ?  configuration.tags : tags;
         textSource = configuration.textSource || textSource;
@@ -388,10 +390,23 @@ ApplicationWindow {
         if ( duration !== globalTimer.duration ) {
             console.log( 'reseting global timer' );
             globalTimer.duration = duration;
-            globalTimer.restart();
+            if ( globalTimer.running ) {
+                globalTimer.restart();
+            }
         }
         //
-        // request update
+        // reset image freqency
+        //
+        var frequency = Math.round((1000*9* ( 1. / globalSpeed ))* ( 1. / imageFrequency ) );
+        if ( frequency !== imageTimer.interval ) {
+            imageTimer.interval = frequency;
+            if ( imageTimer.running ) {
+                imageTimer.restart();
+            }
+        }
+
+        //
+        // if tags have changed request update
         //
         if ( previousTags !== tags ) {
             mashChannel.update();
@@ -434,7 +449,6 @@ ApplicationWindow {
                 Database.find({"type":"image"},{"views":1},1);
             }
             console.log( 'query' + JSON.stringify(query) );
-
         }
     }
     //
@@ -631,15 +645,16 @@ ApplicationWindow {
     ]
     property real globalTime: 0
     property alias cumulative: background
-    /*
-      configuration
-      */
+    //
+    // configuration
+    //
     property int currentShader: 1
     property int nextShader: 1
     property color textColour: "red"
     property color effectColour: "white"
     property real globalSpeed: 1.
     property real effectSpeed: 1.
+    property real imageFrequency: .5
     property string imageSource: ""
     property string textSource: ""
     property string tags: ""

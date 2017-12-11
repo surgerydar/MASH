@@ -3,7 +3,7 @@ var config = require('./config');
 var fs = require('fs');
 var request = require('request');
 var sharp = require('sharp');
-//var nlp = require('compromise')
+var nlp = require('compromise')
 //var config = { ssl: { key: fs.readFileSync('./ssl/server.key'), cert: fs.readFileSync('./ssl/server.crt')}};
 
 //
@@ -82,6 +82,9 @@ db.connect(
     //
     //
     app.use(bodyParser.json( {limit:'5mb'} ));
+    //
+    //
+    //
 	app.use(bodyParser.urlencoded({'limit': '5mb', 'extended': false }));
 	//
 	// configure express
@@ -105,15 +108,71 @@ db.connect(
     //
     app.post('/mash', jsonParser, function (req, res) {
         var account = req.body.account;
-        db.findOne( { account: account } ).then( function( response ) {
+        db.findOne( 'user', { id: account } ).then( function( response ) {
+            //
+            // preprocess tags
+            //
+            if ( req.body.mash.tags ) {
+                if ( typeof req.body.mash.tags === 'string' ) {
+                    req.body.mash.tags = req.body.mash.tags.split(',');
+                }
+                for ( var i = 0; i < req.body.mash.tags.length; ++i ) {
+                    req.body.mash.tags[ i ] = req.body.mash.tags[ i ].trim().toLowerCase();
+                }
+           } else {
+                req.body.mash.tags = [];
+            }
+            //
+            // extract aditional tags from content
+            // TODO: shift this into module
+            //
+            if ( req.body.mash.type === 'text' ) {
+                try {
+                    var text = nlp(req.body.mash.content);
+                    var topics = text.topics();
+                    if ( topics ) {
+                        topics = topics.not('#Possessive');
+                        var topicTags = topics.out('array');
+                        if( topicTags ) {
+                            topicTags.forEach( function( topic ) {
+                                topic = topic.toLowerCase();
+                                if ( req.body.mash.tags.indexOf(topic) < 0 ) {
+                                    req.body.mash.tags.push(topic);
+                                }
+                            });
+                        }
+                    }
+                } catch( error ) {
+                    console.log( 'error extracting topics : ' + error );
+                }
+                //
+                // extract # and @
+                //
+                try {
+                    var regexp = /[#@][a-z0-9_]+/g;
+                    var hashtags = req.body.mash.content.toLowerCase().match( regexp );
+                    if ( hashtags ) {
+                        hashtags.forEach( function( hashtag ) {
+                            hashtag = hashtag.substring(1);
+                            if ( req.body.mash.tags.indexOf(hashtag) < 0 ) {
+                                req.body.mash.tags.push(hashtag);
+                            }
+                        });
+                    }
+                } catch( error ) {
+                    console.log( 'error extracting hashtags : ' + error );
+                }
+            }
+            //
             // store mash
+            //
             db.putMash( req.body ).then( function( response ) {
                 res.json( {status: 'OK'} );
             } ).catch( function( error ) {
                 res.json( {status: 'ERROR', message: error } );
             });
         }).catch( function( error ) {
-            res.json( {status: 'ERROR', message: 'invalid account' } );
+            res.json( {status: 'ERROR', message: error } );
         });
     });
     app.put('/mash/:id', isAuthenticated, jsonParser, function (req, res) {
@@ -284,8 +343,14 @@ db.connect(
     app.post('/direct', jsonParser, function (req, res) {
         // store mash
         console.log( 'post direct : ' + JSON.stringify(req.body) );
-        var account = '{' + req.body.account + '}';
-        db.findOne( { account: account } ).then( function( response ) {
+        var account = req.body.account;
+        if ( account.indexOf('{') !== 0 ) {
+            account = '{' + account;
+        }
+        if ( account.indexOf('}') !== account.length - 1 ) {
+            account += '}';
+        } 
+        db.findOne( 'user', { id: account } ).then( function( response ) {
             try {
                 wsr.sendcommand( server.ws, req.body.instance, req.body.account, req.body.command );
                 res.json( {status: 'OK'} );

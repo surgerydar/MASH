@@ -43,10 +43,10 @@ Db.prototype.putMash = function( data ) {
         if (    data.mash === undefined ||   
                 data.mash.type === undefined || 
                 data.mash.content === undefined || 
-                data.mash.type.length() === 0 || 
-                data.mash.content.length() === 0 ||  
+                data.mash.type.length === 0 || 
+                data.mash.content.length === 0 ||  
                 !( data.mash.type === "text" || data.mash.type === "image" ) ) {
-            reject('invalid mash')
+            reject( new Error( 'putMash : invalid mash ' + JSON.stringify( data ) ) );
         } else {
             try {
                 data.time = Date.now(); // time stamp
@@ -114,7 +114,7 @@ Db.prototype.find = function( collection, query, projection, offset, limit ) {
 	var db = this.db;
 	return new Promise( function( resolve, reject ) {
 		try {
-			db.collection( collection ).find( query, projection ).skip(offset||0).limit(limit||0).toArray( function(err,result) {
+			db.collection( collection ).find( query, projection || {} ).sort( { time: -1 } ).skip(offset||0).limit(limit||0).toArray( function(err,result) {
 				if ( err ) {
 					reject( err );
 				} else {
@@ -131,7 +131,7 @@ Db.prototype.findOne = function( collection, query, projection ) {
 	var db = this.db;
 	return new Promise( function( resolve, reject ) {
 		try {
-			db.collection( collection ).findOne( query, projection, function(err, result) {
+			db.collection( collection ).findOne( query, projection || {}, function(err, result) {
 				if ( err ) {
 					reject( err );
                 } else if ( result ) {
@@ -150,8 +150,7 @@ Db.prototype.update = function( collection, query, update, options ) {
 	var db = this.db;
 	return new Promise( function( resolve, reject ) {
 		try {
-            options = options || {};
-			db.collection( collection ).update( query, update, options, function(err, result) {
+			db.collection( collection ).update( query, update, options || {}, function(err, result) {
 				if ( err ) {
 					reject( err );
 				} else {
@@ -185,8 +184,7 @@ Db.prototype.count = function( collection, query, options ) {
 	var db = this.db;
 	return new Promise( function( resolve, reject ) {
 		try {
-            options = options | {};
-			db.collection( collection ).count( query, options, function(err,result) {
+			db.collection( collection ).count( query, options || {}, function(err,result) {
 				if ( err ) {
 					reject( err );
 				} else {

@@ -251,6 +251,7 @@ var utils = {
                     effect: Math.max( 0, Math.min( 5, parseInt(display.querySelector('input[name="effect-index"]').value) ) ),
                     textColour: display.querySelector('input[name="text-colour"]').value,
                     effectColour: display.querySelector('input[name="effect-colour"]').value,
+                    imageFrequency: parseFloat(display.querySelector('input[name="image-frequency"]').value)/100.,
                     globalSpeed: parseFloat(display.querySelector('input[name="global-speed"]').value)/100.,
                     effectSpeed: parseFloat(display.querySelector('input[name="effect-speed"]').value)/100.,
                     tags: display.querySelector('input[name="tags"]').value,

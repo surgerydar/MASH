@@ -80,6 +80,7 @@ private:
     void _sort();
     void __sort(QList<QVariantMap>& list,QVariantMap& s);
     bool _match( QVariantMap& object, QVariantMap& query );
+    bool _matchList( QVariantMap& object, const QString& selector, QVariantList& list );
     void _update( QVariantMap& object, QVariantMap& update );
     QString _path();
     //

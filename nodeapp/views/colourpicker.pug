@@ -1,0 +1,14 @@
+mixin colourpicker(colour)
+    -
+        var red     = parseInt( "0x" + colour.substring( 0, 2 ) );
+        var green   = parseInt( "0x" + colour.substring( 2, 4 ) );
+        var blue    = parseInt( "0x" + colour.substring( 4, 6 ) );
+    .colour-picker.closed
+        .colour-picker-swatch-container
+            .colour-picker-swatch
+            input.colour-picker-hex( name='colour-hex' type='text' value= colour )
+        .colour-picker-slider-container
+            input.colour-picker-slider( name='red' type='range' min='0' max='255' value= red )
+            input.colour-picker-slider( name='green' type='range' min='0' max='255' value= green )
+            input.colour-picker-slider( name='blue' type='range' min='0' max='255' value= blue )
+            

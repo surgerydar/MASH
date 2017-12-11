@@ -325,7 +325,7 @@ nav.list_pagination {
 */
 .instance-list {
     width: 100%;
-    height: 816px;
+    height: 880px;
     display: flex;
     flex-direction: row;
     justify-content: space-around;
@@ -337,8 +337,8 @@ nav.list_pagination {
     position: relative;
     display: flex;
     width: 600px;
-    height: 800px;
-    margin: 0 8px 0 8px
+    height: 864px;
+    margin: 0 4px 0 4px;
     flex: none;
     flex-direction: column;
     align-items: center;
@@ -395,5 +395,29 @@ nav.list_pagination {
     margin: 2px;
     text-align: center;
     background-color: rgb( 121,121,121 );
+}
+/*
+    colour picker
+*/
+.colour-picker-container {
+    display: flex;
+    flex-direction: row;
+    
+    background-color: white;
+}
+.colour-picker-swatch-container {
+    display: flex;
+    flex-direction: column;
+}
+.colour-picker-swatch {
+    width: 64px;
+    height: 64px;
+}
+input[type='text'].colour-picker-hex {
+    flex: none;
+    align-self: stretch;
+}
+input[type='range'][name='red'] {
+    
 }
 

@@ -7,7 +7,7 @@
             searchTags += search.tags[ i ];
             if ( i < search.tags.length - 1 ) searchTags += ',';
         }
-    nav( style='display: flex; align-items: start;')
+    nav( style='display: flex; align-items: space-around; justify-content: center;')
         if hasPrevious
             button( style='margin: 8px; align-self: center; width: 64px;' name='previous-page' ) <
         input( id='mash-search' style='margin: 8px; align-self: center;' type='search' placeholder='tag,tag,...' value= searchTags )
@@ -27,7 +27,7 @@
                         else
                             - var text = mash.content.trim();
                             .thumbnail= text
-                        - var tags = mash.tags.join();
+                        - var tags = mash.tags && typeof mash.tags !== 'string' ? mash.tags.join() : "";
                         input( type='text' name='tags' value= tags )
                         button( name='tag-item' ) tag
                         .delete
