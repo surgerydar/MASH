@@ -5,7 +5,9 @@ html
         meta( name='viewport' content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0' )
     body
         #container
-            a( href='/logout' style='position: absolute; top: 8px; right: 8px;') logout
+            nav.main
+                a( href='/account' style='margin: 0 4px 0 4px') account
+                a( href='/logout' style='margin: 0 4px 0 4px') logout
             h1() MASH - Admin
             h2() Account #{account}
             h2() Displays

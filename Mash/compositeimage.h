@@ -41,9 +41,11 @@ public slots:
     void stop();
 private:
     void allocateImage();
+    void clearGrabResult( QString id );
     QMutex m_guard;
     QImage m_image;
     FadeThread* m_fader;
+    QMap< QString,QSharedPointer<QQuickItemGrabResult> > m_grabResults;
 };
 
 

@@ -3,10 +3,10 @@
 
 #include <QQuickImageProvider>
 
-class Noise : public QQuickImageProvider
+class MashNoise : public QQuickImageProvider
 {
 public:
-    explicit Noise();
+    MashNoise();
     QImage requestImage(const QString &id, QSize *size, const QSize &requestedSize) override;
 signals:
 

@@ -14,8 +14,8 @@ SOURCES += main.cpp \
     cachedimageprovider.cpp \
     networkaccess.cpp \
     networkconfiguration.cpp \
-    noise.cpp \
-    effect.cpp
+    effect.cpp \
+    mashnoise.cpp
 
 RESOURCES += qml.qrc
 
@@ -55,5 +55,5 @@ HEADERS += \
     cachedimageprovider.h \
     networkaccess.h \
     networkconfiguration.h \
-    noise.h \
-    effect.h
+    effect.h \
+    mashnoise.h

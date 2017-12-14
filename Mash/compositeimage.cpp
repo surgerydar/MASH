@@ -4,6 +4,7 @@
 #include <QQuickItemGrabResult>
 #include <QFile>
 #include <QThread>
+#include <QUuid>
 #include "systemutils.h"
 
 void FadeThread::run() {
@@ -11,36 +12,29 @@ void FadeThread::run() {
     while( !isInterruptionRequested() ) {
         QImage* image = target->getImage();
         if ( image && !image->isNull() && image->width() > 0 && image->height() > 0 ) {
+            int height = image->height();
             int bytesPerPixel = image->bytesPerLine() / image->width();
-            for (int y = 0; y < image->height(); ++y) {
+            for (int y = 0; y < height; ++y) {
                 target->lock();
                 QRgb *rgba;
                 uchar* pixel = image->scanLine(y);
-                for (int x = 0; x < image->width(); ++x) {
+                int width = image->width();
+                for (int x = 0; x < width; ++x) {
                     rgba = (QRgb *)pixel;
 
                     if (qAlpha(*rgba) != 0 && (qRed(*rgba) != 0 || qGreen(*rgba) != 0 || qBlue(*rgba) != 0)) {
                         QColor c = QColor::fromRgba(*rgba);
                         qreal h,s,v,a;
                         c.getHsvF(&h,&s,&v,&a);
-                        qreal before;
-                        if ( x == 100 && y == 100 ) {
-                            before = v;
-                        }
                         v *= .99;
                         c.setHsvF(h,s,v,a);
                         *rgba = c.rgba();
-                        if ( x == 100 && y == 100 ) {
-                            qDebug() << "before:" << before << " after:" << c.valueF();
-                        }
-                        //*rgba = QColor::fromRgba(*rgba).darker(101).rgba();
                     }
-
                     pixel += bytesPerPixel;
                 }
                 target->unlock();
                 //target->update();
-                if ( isInterruptionRequested() ) {
+                if ( isInterruptionRequested() || image->width() != width || image->height() != height ) {
                     break;
                 }
             }
@@ -54,28 +48,40 @@ CompositeImage::CompositeImage(QQuickItem *parent) : QQuickPaintedItem(parent) {
 }
 
 void CompositeImage::paint(QPainter *painter) {
-    allocateImage();
     QRectF bounds(x(),y(),width(),height());
-    m_guard.lock();
-    painter->drawImage(bounds, m_image);
-    m_guard.unlock();
-    update();
+    if ( bounds.width() > 0 && bounds.height() > 0 ) {
+        allocateImage();
+        m_guard.lock();
+        painter->drawImage(bounds, m_image);
+        m_guard.unlock();
+        update();
+    }
 }
 
 void CompositeImage::addImage( QQuickItem *image ) {
     allocateImage();
     QRectF bounds( image->x(), image->y(), image->width(), image->height());
     bounds = image->mapRectToItem(this,bounds);
+    qreal opacity = image->opacity();
     QSharedPointer<QQuickItemGrabResult> result = image->grabToImage();
     if ( result ) {
-        connect(result.data(), &QQuickItemGrabResult::ready, [=]() {
-            qreal opacity = image->opacity();
-            QMutexLocker locker(&this->m_guard);
-            QPainter painter(&this->m_image);
-            painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
-            painter.setOpacity(opacity);
-            painter.drawImage(bounds,result->image());
-            this->update();
+        QString id = QUuid::createUuid().toString();
+        m_grabResults[id] = result;
+        connect(result.data(), &QObject::destroyed,[id]() {
+            qDebug() << "CompositeImage::addImage : grab result destroyed : " << id;
+        });
+        connect(result.data(), &QQuickItemGrabResult::ready, [this,bounds,opacity,id]() {
+            if ( this->m_grabResults.contains(id) ) {
+                QSharedPointer<QQuickItemGrabResult> result = m_grabResults[ id ];
+                QMutexLocker locker(&this->m_guard);
+                QImage image = result->image();
+                QPainter painter(&this->m_image);
+                painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+                painter.setOpacity(opacity);
+                painter.drawImage(bounds,image);
+                this->update();
+                this->clearGrabResult(id);
+            }
         } );
     } else {
         qDebug() << "addImage : unable to paint item";
@@ -88,15 +94,20 @@ void CompositeImage::addImage( QQuickItem *image ) {
 
 void CompositeImage::save() {
     QMutexLocker locker(&m_guard);
+    qDebug() << "CompositeImage::save";
     QString path = SystemUtils::shared()->documentDirectory().append("/").append("mash-composite.png");
     m_image.save(path);
+    qDebug() << "CompositeImage::save : done";
 }
 
 void CompositeImage::load() {
     QMutexLocker locker(&m_guard);
+    qDebug() << "CompositeImage::load";
+
     QString path = SystemUtils::shared()->documentDirectory().append("/").append("mash-composite.png");
     if ( QFile::exists(path) ) {
         m_image.load(path);
+        qDebug() << "CompositeImage::load : done";
     }
 }
 
@@ -113,6 +124,7 @@ void CompositeImage::stop() {
 
 void CompositeImage::allocateImage() {
     if ( m_image.width() != width() || m_image.height() != height() ) {
+        qDebug() << "CompositeImage::allocateImage : " << width() << "x" << height();
         QMutexLocker locker(&m_guard);
         QImage current = m_image;
         m_image = QImage(width(),height(),QImage::Format_ARGB32_Premultiplied);
@@ -123,9 +135,18 @@ void CompositeImage::allocateImage() {
             QPainter painter(&m_image);
             painter.drawImage(bounds,current);
         }
+        qDebug() << "CompositeImage::allocateImage : done";
 
     }
 }
+
+void CompositeImage::clearGrabResult( QString id ) {
+    if ( m_grabResults.contains(id) ) {
+        m_grabResults[ id ].clear();
+        m_grabResults.remove(id);
+    }
+}
+
 /*
 void CompositeImage::fade() {
     QRectF bounds( 0, 0, m_image.width(), m_image.height());

@@ -1,0 +1,13 @@
+html
+    head
+        title= title
+        link(rel='stylesheet', href='styles/mash.css')
+        meta( name='viewport' content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0' )
+    body
+        #container
+            nav.main
+                a( href='/admin' ) admin
+                a( href='/logout' ) logout
+            h1() MASH - Admin
+            h2() Account #{account}
+        script(src='/scripts/mash.js')

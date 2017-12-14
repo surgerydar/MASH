@@ -92,18 +92,24 @@ void AsyncDatabase::save() {
     QMutexLocker locker(&m_guard);
     QString dbPath = _path();
     QFile db(dbPath);
-    qDebug() << "DatabaseList::save : opening : " << dbPath;
+    qDebug() << "AsyncDatabase::save : opening : " << dbPath;
     if (db.open(QIODevice::WriteOnly)) {
-        qDebug() << "DatabaseList::save : writing documents";
+        qDebug() << "AsyncDatabase::save : writing documents";
         QJsonArray array;
-        if ( m_documents.size() > 0 ) {
-            for ( auto& object : m_documents ) {
-                array.append(QJsonValue::fromVariant(QVariant(object)));
+        try {
+            if ( m_documents.size() > 0 ) {
+                for ( auto& object : m_documents ) {
+                    array.append(QJsonValue::fromVariant(QVariant(object)));
+                }
             }
+            QJsonDocument doc;
+            doc.setArray(array);
+            db.write(doc.toJson());
+        } catch( ... ) {
+            qDebug() << "AsyncDatabase::save : error writing documents";
         }
-        QJsonDocument doc;
-        doc.setArray(array);
-        db.write(doc.toJson());
+
+        qDebug() << "AsyncDatabase::save : done";
     } else {
         qDebug() << "DatabaseList::save : unable to open : " << dbPath;
         emit error(Save,dbPath.prepend("unable to open file : "));
@@ -112,7 +118,7 @@ void AsyncDatabase::save() {
 }
 
 //
-//
+// non blocking
 //
 void AsyncDatabase::clear() {
     QMutexLocker locker(&m_guard);
@@ -303,7 +309,7 @@ void AsyncDatabase::convertDocumentToMash( QVariantMap& document, QVariantMap& m
     }
 }
 //
-// non blocking
+// blocking
 //
 QVariantMap AsyncDatabase::_findOne(QVariantMap query) {
     int count = m_documents.size();

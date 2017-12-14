@@ -7,11 +7,13 @@ import SodaControls 1.0
 import "Layout.js" as Layout
 import "utils.js" as Utils
 
-ApplicationWindow {
+Window {
     id: appWindow
+    objectName: "appWindow"
     visible: true
-    width: 1000
-    height: 500
+    //visibility: Window.FullScreen
+    width: Screen.width
+    height: Screen.height
     title: qsTr("MASH")
 
     Item {
@@ -51,10 +53,20 @@ ApplicationWindow {
             shader: shaders[ currentShader ].background
             source: backgroundSource
         }
+        //
+        //
+        //
+        /*
         Item {
             id: mashContainer
             anchors.fill: parent
         }
+        */
+        MashContainer {
+            id: mashContainer
+            anchors.fill: parent
+        }
+
         //
         //
         //
@@ -128,18 +140,41 @@ ApplicationWindow {
         //
         //
         onSuccess: {
-            console.log( 'database success : ' + operation + ' : ' + Database.Find );
+            //console.log( 'database success : ' + operation );
             switch(operation) {
             case AsyncDatabase.Find :
                 console.log( 'Database.Find : found ' + result.length );
                 if( result.length > 0 ) {
-                    var mash = result[ 0 ];
+                    //
+                    // bias towards active tags
+                    //
+                    var maxScore = -1;
+                    var maxIndex = 0;
+                    for ( var i = 0; i < result.length; ++i ) {
+                        if ( result[ i ].tags ) {
+                            var score = containsActiveTags(result[i].tags);
+                            if ( score > maxScore ) {
+                                maxScore = score;
+                                maxIndex = i;
+                            }
+                        }
+                    }
+                    //
+                    // instanciate
+                    //
+                    var mash = result[ maxIndex ];
                     instanciateMash(mash);
                     Database.update({"_id":mash["_id"]},{"views":++mash.views});
                 }
                 break;
             case AsyncDatabase.Load :
+                console.log( 'Database.Load' );
+                break;
             case AsyncDatabase.Save :
+                console.log( 'Database.Save' );
+                break;
+            case AsyncDatabase.Update :
+                Database.save();
                 break;
             default:
                 //Database.save();
@@ -151,6 +186,7 @@ ApplicationWindow {
         }
     }
     function instanciateMash( mash ) {
+        //console.log( 'Instanciating mash : ' + JSON.stringify(mash) );
         //
         // load mash
         //
@@ -166,17 +202,13 @@ ApplicationWindow {
             //
             mash.content = mash.content.trim();
             //
-            // random offset
+            // instanciate mash
             //
-            /*
-            bounds.x += ( .5 - Math.random() ) * 15;
-            bounds.y += ( .5 - Math.random() ) * 15;
-            bounds.width = Math.min( bounds.width, width - bounds.x );
-            bounds.height = Math.min( bounds.height, height - bounds.y );
-            */
+
+
             switch( mash.type ) {
             case "text" :
-                console.log( 'creating text instance at : ' + JSON.stringify(bounds) );
+                //console.log( 'creating text instance at : ' + JSON.stringify(bounds) );
                 //
                 // extend to fill width
                 //
@@ -191,17 +223,20 @@ ApplicationWindow {
                 //var hAlign = Math.random() > .5 ? Text.AlignLeft : Text.AlignRight;
                 var hAlign = Text.AlignLeft;
                 var vAlign = Math.random() > .5 ? Text.AlignTop : Text.AlignBottom;
-                textComponent.createObject(mashContainer,{ "x":bounds.x, "y":bounds.y, "width": bounds.width, "height": bounds.height, "text":mash.content, "colour": textColour, "shader": shaders[ currentShader ].mash, "hAlign": hAlign, "vAlign": vAlign});
+                //textComponent.createObject(mashContainer,{ "x":bounds.x, "y":bounds.y, "width": bounds.width, "height": bounds.height, "text":mash.content, "colour": textColour, "shader": shaders[ currentShader ].mash, "hAlign": hAlign, "vAlign": vAlign});
+                mashContainer.instanciateMash("text",{ "x":bounds.x, "y":bounds.y, "width": bounds.width, "height": bounds.height, "text":mash.content, "colour": textColour, "shader": shaders[ currentShader ].mash, "hAlign": hAlign, "vAlign": vAlign, "tags": mash.tags});
                 break;
             case "image" :
-                console.log( 'creating image instance at : ' + JSON.stringify(bounds) );
+                //console.log( 'creating image instance at : ' + JSON.stringify(bounds) );
                 //
                 // redirect dropbox through mash proxy
                 //
                 mash.content = mash.content.replace('https://dl.dropboxusercontent.com:443','http://mash.soda.co.uk');
-                imageComponent.createObject(mashContainer,{ "x":bounds.x, "y":bounds.y, "width": bounds.width, "height": bounds.height, "source":"image://cached/" + mash.content.trim(), "shader": shaders[ currentShader ].mash});
+                //imageComponent.createObject(mashContainer,{ "x":bounds.x, "y":bounds.y, "width": bounds.width, "height": bounds.height, "source":"image://cached/" + mash.content.trim(), "shader": shaders[ currentShader ].mash});
+                mashContainer.instanciateMash("image",{ "x":bounds.x, "y":bounds.y, "width": bounds.width, "height": bounds.height, "source":"image://cached/" + mash.content.trim(), "shader": shaders[ currentShader ].mash, "tags" : mash.tags});
                 break;
             }
+
         }
     }
     //
@@ -221,6 +256,10 @@ ApplicationWindow {
                 console.log( 'WebChannel : adding ' + result.length + ' entries' );
                 //Database.addMany(result);
                 Database.sync(result);
+                //
+                //
+                //
+                gc();
             } else {
                 console.log( 'no results from database update')
             }
@@ -255,6 +294,10 @@ ApplicationWindow {
         //
         //
         //
+        onError: {
+            console.log('WebSocketChannel : error' );
+        }
+
         onOpened : {
             console.log('WebSocketChannel : opened');
         }
@@ -262,7 +305,7 @@ ApplicationWindow {
             console.log('WebSocketChannel : closed');
         }
         onReceived: {
-            console.log('WebSocketChannel : received : ' + message );
+            //console.log('WebSocketChannel : received : ' + message );
             var guid;
             var command = JSON.parse(message);
             switch( command.command.toLowerCase() ) {
@@ -296,6 +339,11 @@ ApplicationWindow {
                 break;
             case 'updatedisplayconfiguration' :
                 setConfiguration(command.configuration);
+                //
+                //
+                //
+                Settings.set("configuration", JSON.stringify(getConfiguration()));
+                Settings.save();
                 break;
             case 'text' :
                 //instanciateMash( {type:"text", content:command.content} );
@@ -443,12 +491,14 @@ ApplicationWindow {
             var query;
             if ( imageSource.length > 0 ) {
                 query = {"type":"image","source":imageSource};
-                Database.find(query,{"views":1},1);
+                //Database.find(query,{"views":1},1);
+                Database.find(query,{"views":1},10);
             } else {
                 query = {"type":"image"};
-                Database.find({"type":"image"},{"views":1},1);
+                //Database.find({"type":"image"},{"views":1},1);
+                Database.find({"type":"image"},{"views":1},10);
             }
-            console.log( 'query' + JSON.stringify(query) );
+            //console.log( 'query' + JSON.stringify(query) );
         }
     }
     //
@@ -463,9 +513,11 @@ ApplicationWindow {
         repeat: true
         onTriggered: {
             if ( textSource.length > 0 ) {
-                Database.find({"type":"text","source":textSource},{"views":1},1);
+                //Database.find({"type":"text","source":textSource},{"views":1},1);
+                Database.find({"type":"text","source":textSource},{"views":1},10);
             } else {
-                Database.find({"type":"text"},{"views":1},1);
+                //Database.find({"type":"text"},{"views":1},1);
+                Database.find({"type":"text"},{"views":1},10);
             }
         }
     }
@@ -552,7 +604,6 @@ ApplicationWindow {
     //
     //
     Component.onCompleted: {
-
         //
         // Load settings
         //
@@ -583,17 +634,6 @@ ApplicationWindow {
         //
         Database.load();
         //
-        //
-        //
-        background.load();
-        background.start();
-        //
-        // Start animation
-        //
-        mashTimer.start();
-        imageTimer.start();
-        textTimer.start();
-        //
         // Open communications with the server
         //
         webSocketChannel.open();
@@ -605,6 +645,17 @@ ApplicationWindow {
         // Go fullscreen
         //
         appWindow.showFullScreen();
+        //
+        //
+        //
+        background.load();
+        background.start();
+        //
+        // Start animation
+        //
+        mashTimer.start();
+        imageTimer.start();
+        textTimer.start();
     }
     //
     //
@@ -614,10 +665,19 @@ ApplicationWindow {
         //
         //
         disconnectDisplay();
+        webSocketChannel.autoreconnect = false;
+        //
+        //
+        //
+        imageTimer.stop();
+        textTimer.stop();
+        mashTimer.stop();
+        globalTimer.stop();
         //
         //
         //
         background.stop();
+        /*
         background.save();
         //
         //
@@ -628,10 +688,76 @@ ApplicationWindow {
         //
         Settings.set("configuration", JSON.stringify(getConfiguration()));
         Settings.save();
+        */
+        save();
+        //
+        //
+        //
+        webSocketChannel.close();
     }
     //
     //
     //
+    function save() {
+        console.log( 'saving state' );
+        background.save();
+        Database.save();
+        Settings.set("configuration", JSON.stringify(getConfiguration()));
+        Settings.save();
+    }
+    //
+    // active tag handling
+    //
+    function addActiveTags( tags ) {
+        var newTags = tags.slice();
+        //
+        // update existing
+        //
+        activeTags.forEach( function( tagEntry ) {
+            var index = newTags.indexOf( tagEntry.tag );
+            if ( index >= 0 ) {
+                newTags.splice( index, 1 );
+                tagEntry.count++;
+            }
+        });
+        //
+        // add new
+        //
+        newTags.forEach( function( tag ) {
+            activeTags.push({
+                                tag : tag,
+                                count: 1
+                            });
+        });
+        console.log( 'add : active tags : ' + JSON.stringify(activeTags));
+    }
+    function removeActiveTags( tags ) {
+        //
+        // update existing
+        //
+        for ( var i = 0; i < activeTags.length; ) {
+            var index = tags.indexOf( activeTags[ i ].tag );
+            if ( index >= 0 ) {
+                activeTags[ i ].count--;
+                if ( activeTags[ i ].count <= 0 ) {
+                    activeTags.splice(i,1);
+                    continue;
+                }
+            }
+            i++;
+        }
+        console.log( 'remove : active tags : ' + JSON.stringify(activeTags));
+    }
+    function containsActiveTags( tags ) {
+        var count = 0;
+        activeTags.forEach( function( tagEntry ) {
+            var index = tags.indexOf( tagEntry.tag );
+            if ( index >= 0 ) {
+                count++;
+            }
+        });
+        return count;
+    }
     //
     //
     //
@@ -661,4 +787,12 @@ ApplicationWindow {
     property string name: "Unnamed"
     property string instance: ""
     property string account: ""
+    //
+    //
+    //
+    property int mashCount: 0
+    //
+    //
+    //
+    property var activeTags: []
  }

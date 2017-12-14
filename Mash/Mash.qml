@@ -10,6 +10,12 @@ Item {
         width: 512
         height: 512
         source: "image://noise/background"
+        //
+        //
+        //
+        Component.onDestruction: {
+            console.log( 'noise destroyed');
+        }
     }
     ShaderEffectSource {
         id: noiseSource
@@ -101,7 +107,7 @@ Item {
         }
         ScriptAction {
             script: {
-                container.destroy();
+                container.stop();
             }
         }
     }
@@ -112,26 +118,44 @@ Item {
         id: fadeTimer
         interval: 500
         onTriggered: {
-            //console.log('Mash : starting fadeAnimation');
             fadeAnimation.start();
         }
     }
-
-    Timer {
-        id: lifeTimer
-        interval: 1000 * 20
-        onTriggered: {
-            container.destroy();
+    //
+    //
+    //
+    function start() {
+        fadeAnimation.start();
+        visible = true;
+        if ( tags.length > 0 ) {
+            appWindow.addActiveTags(tags);
         }
     }
-    Component.onCompleted: {
-        //console.log('Mash : starting fadeTimer');
-        //fadeTimer.start();
+    function stop() {
+        //container.destroy();
+        container.visible = false;
+        if ( tags.length > 0 ) {
+            appWindow.removeActiveTags(tags);
+        }
     }
+
+    //
+    //
+    //
+    Component.onCompleted: {
+        appWindow.mashCount++;
+        console.log( 'mash created : count : ' + appWindow.mashCount );
+    }
+    Component.onDestruction: {
+        appWindow.mashCount--;
+        console.log( 'mash destroyed : count : ' + appWindow.mashCount );
+    }
+
     //
     //
     //
     property alias sourceItem: source.sourceItem
     property alias shader: effect.fragmentShader
     property alias fadeAnimation: fadeAnimation
+    property var tags: []
 }

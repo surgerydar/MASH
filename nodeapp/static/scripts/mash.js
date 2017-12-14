@@ -356,6 +356,10 @@ var utils = {
                 var previousButton = container.querySelector( 'button[name="previous-page"]' );
                 var nextButton = container.querySelector( 'button[name="next-page"]' );
                 var searchField = container.querySelector('#mash-search');
+                var newTags = container.querySelector('#new-tags');
+                var addTags = container.querySelector('button[name="add-tags"]');
+                var setTags = container.querySelector('button[name="set-tags"]');
+                var deleteAll = container.querySelector('button[name="delete-all"]');
                 console.log( 'count:' + count + ' pagenumber:' + pageNumber + ' pagesize:' + pageSize );
                 function getSearchTags() {
                     if ( searchField ) {
@@ -393,6 +397,73 @@ var utils = {
                     nextButton.onclick = function() {
                         loadMash(account,'all',getSearchTags(), pageNumber + 1, pageSize );
                     };
+                }
+                if ( newTags ) {
+                    function updateAllMashes( mashOperation ) {
+                        for ( var i = 0; i < mashes.length; ++i ) {
+                            mashOperation( mashes[ i ] );
+                        }
+                    }
+                    if ( addTags ) {
+                        addTags.onclick = function() {
+                            var additionalTags = newTags.value;
+                            if ( additionalTags.length <= 0 ) return;
+                            additionalTags = additionalTags.split(',');
+                            if ( additionalTags.length <= 0 ) return;
+                            for ( var tag = 0; tag < additionalTags.length; ++tag ) {
+                                additionalTags[ tag ] = additionalTags[ tag ].trim();
+                            }
+                            //
+                            //
+                            //
+                            updateAllMashes( function( mash ) {
+                                var endpoint = '/mash/' + mash.getAttribute('data-id');
+                                var tags = mash.querySelector('input[name="tags"]').value;
+                                tags = tags.length > 0 ? tags.split(',') : [];
+                                for ( var tag = 0; tag < tags.length; ++tag ) {
+                                    tags[ tag ] = tags[ tag ].trim();
+                                }
+                                var data = {
+                                    'mash.tags': tags.concat(additionalTags)
+                                };
+                                
+                                rest.put( endpoint, data, {
+                                    onloadend : function( evt ) {
+                                        //
+                                        // update item in list
+                                        //
+                                        mash.querySelector('input[name="tags"]').value = tags.join();
+                                    },
+                                    onerror : function( evt ) {
+                                        alert( 'error updating item' );
+                                    }
+                                });
+                            });
+                        }
+                    }
+                    if ( setTags ) {
+                        setTags.onclick = function() {
+                            
+                        }
+                    }
+                    if ( deleteAll ) {
+                        deleteAll.onclick = function() {
+                            if ( confirm( 'are you sure you want to delete this item?' ) ) {
+                                var endpoint = '/mash/' + mash.getAttribute('data-id');
+                                rest.delete( endpoint, {
+                                    onloadend : function( evt ) {
+                                        //
+                                        // remove item from list
+                                        //
+                                        mash.parentNode.removeChild(mash);
+                                    },
+                                    onerror : function( evt ) {
+                                        alert( 'error delting item' );
+                                    }
+                                });
+                            }
+                        }
+                    }
                 }
                 //
                 //

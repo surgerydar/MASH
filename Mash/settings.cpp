@@ -59,6 +59,7 @@ void Settings::load() {
 }
 
 void Settings::save() {
+    qDebug() << "Settings::save";
     //
     // assume the path is relative to documents directory
     //
@@ -66,12 +67,15 @@ void Settings::save() {
     //
     // open
     //
+    qDebug() << "Settings::save : opening file : " << fullpath;
     QFile jsonFile(fullpath);
     if (jsonFile.open(QIODevice::WriteOnly)) {
+        qDebug() << "Settings::save : saving file";
         QJsonDocument document;
         document.setObject(QJsonObject::fromVariantMap(m_settings));
         QByteArray json = document.toJson(QJsonDocument::Indented);
         jsonFile.write(json);
+        qDebug() << "Settings::save : done";
     } else {
         QString error = "Unable to open file : ";
         error.append(fullpath);

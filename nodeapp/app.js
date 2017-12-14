@@ -1,9 +1,10 @@
-var env = process.env;
-var config = require('./config');
-var fs = require('fs');
+var env     = process.env;
+var config  = require('./config');
+var fs      = require('fs');
 var request = require('request');
-var sharp = require('sharp');
-var nlp = require('compromise')
+var sharp   = require('sharp');
+var nlp     = require('compromise');
+var bcrypt  = require('bcryptjs');
 //var config = { ssl: { key: fs.readFileSync('./ssl/server.key'), cert: fs.readFileSync('./ssl/server.crt')}};
 
 //
@@ -39,9 +40,11 @@ db.connect(
             console.log( 'authenticating : ' + username );
             db.findOne( 'user', { username: username } ).then( function(user) {
                 console.log( 'found user : ' + JSON.stringify(user) );
-                if (!user) callback(null, false);
-                if (user.password != password) callback(null, false);
-                callback(null, user);
+                if (user && bcrypt.compareSync(password, user.password) ) {
+                    callback(null, user);
+                } else {
+                    callback(null, false);
+                }
             }).catch( function( error ) {
                 callback(null,false);
             });
@@ -86,6 +89,14 @@ db.connect(
     //
     //
 	app.use(bodyParser.urlencoded({'limit': '5mb', 'extended': false }));
+    //
+    // error handling
+    //
+    /*
+    app.use(function (err, req, res, next) {
+    
+    });
+    */
 	//
 	// configure express
 	//
@@ -290,10 +301,62 @@ db.connect(
         req.logout();
         res.redirect('/login');
     });
+    app.get('/register/:account/:email', function( req, res ) {
+        db.findOne( 'user', { $and : [ { account: req.params.account }, { email: req.params.email } ] } ).then( function( user ) {
+            res.render('register', { title: 'Mash - register', username: user.username, email: user.email } );
+        }).catch( function( error ) {
+            res.render('error', { message: "inavalid account or email" } );
+        });
+        
+    });
+    app.post('/register', function(req, res) {
+        /*
+        db.update( 'user', 
+                  { username: req.body.username, email: req.body.email, account: req.body.account}, 
+                  { $set: { {username: req.body.username, password: req.body.password} } } ).then( function(response) {
+            res.redirect('/admin');
+        }).catch( function( error ) {
+            res.render('error', { message: 'registration error : ' + error } );
+        });
+        */
+        res.render('error', { message: 'unknown operation' } );
+    });
+    /*
+    const updatekey = 'freddo1203';
+    app.get('/updatedb/:key', function( req, res ) {
+        if ( req.params.key === updatekey ) {
+            db.find( 'user', {} ).then( function( users ) {
+                var salt = bcrypt.genSaltSync(10);
+                users.forEach( function( user ) {
+                    db.update( 'user', { username: user.username }, { $set: { password: bcrypt.hashSync(user.password, salt) } } ).then( function( response ) {
+                        
+                    }).catch( function( error ) {
+                        
+                    });
+                });
+                res.redirect('/login');
+            }).catch( function( error ) {
+                res.render('error', { message: 'update error : ' + error } );
+            });
+        }
+    });
+    */
     //
     // admin
     //
     app.get('/admin', isAuthenticated, function(req, res) {
+        db.find( 'display', { account: req.user.id } ).then( function( displays ) {
+            res.render('admin', { title: "MASH Admin", account: req.user.id, displays: displays } );
+        } ).catch( function( error ) {
+            res.render('error', { message: JSON.stringify( error ) } );
+        });
+    });
+    //
+    //
+    //
+    app.get('/account', isAuthenticated, function(req, res) {
+        res.render('account', { message: JSON.stringify( error ) } );
+        /*
         db.find( 'mash', {"mash.type": "image"} ).then( function( images ) {
             db.find( 'mash', {"mash.type": "text"} ).then( function( texts ) {
                 db.find( 'display', { account: req.user.id } ).then( function( displays ) {
@@ -307,6 +370,7 @@ db.connect(
         }).catch( function( error ) {
             res.render('error', { message: JSON.stringify( error ) } );
         });
+        */
     });
     app.get('/display/:id', isAuthenticated, function(req, res) {
         var id = req.params.id;

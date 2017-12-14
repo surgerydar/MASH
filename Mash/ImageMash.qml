@@ -16,7 +16,10 @@ Mash {
         //
         onStatusChanged: {
             if ( status === Image.Ready ) {
-                fadeAnimation.start();
+                //fadeAnimation.start();
+                container.start();
+            } else if ( status === Image.Error ) {
+                container.stop();
             }
         }
         //
@@ -25,7 +28,6 @@ Mash {
         Component.onCompleted: {
             container.sourceItem = content;
         }
-
     }
     //
     //

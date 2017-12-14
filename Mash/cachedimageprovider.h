@@ -5,6 +5,7 @@
 #include <QVariantMap>
 #include <QThreadPool>
 #include <QNetworkAccessManager>
+#include <QMutex>
 
 class CachedImageProvider : public QQuickAsyncImageProvider
 {
@@ -23,6 +24,7 @@ private:
 
     static QVariantMap s_cache;
 
+    static QMutex m_guard;
     QThreadPool m_pool;
 };
 

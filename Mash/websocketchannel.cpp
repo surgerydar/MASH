@@ -69,6 +69,7 @@ void WebSocketChannel::textMessageReceived(const QString& message) {
 }
 
 void WebSocketChannel::socketError(QAbstractSocket::SocketError err) {
+    qDebug() << "WebSocketChannel::socketError : " << err;
     QString errorText( "socket error : ");
     switch( err ) {
     case QAbstractSocket::ConnectionRefusedError :

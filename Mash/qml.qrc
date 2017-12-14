@@ -42,5 +42,6 @@
         <file>shaders/verticalbars.frag</file>
         <file>shaders/horizontalbars-offset.frag</file>
         <file>shaders/horizontalbars.frag</file>
+        <file>MashContainer.qml</file>
     </qresource>
 </RCC>

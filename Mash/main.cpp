@@ -1,6 +1,8 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QCursor>
+#include <QDebug>
 #include "webchannel.h"
 #include "asyncdatabase.h"
 #include "databaseconnector.h"
@@ -10,12 +12,17 @@
 #include "settings.h"
 #include "cachedimageprovider.h"
 #include "networkconfiguration.h"
-#include "noise.h"
+#include "mashnoise.h"
 
 int main(int argc, char *argv[])
 {
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QGuiApplication app(argc, argv);
+    //
+    // hide cursor
+    //
+    QCursor blankCursor( Qt::BlankCursor );
+    app.setOverrideCursor(blankCursor);
     //
     //
     //
@@ -39,7 +46,7 @@ int main(int argc, char *argv[])
     //
     //
     engine.addImageProvider("cached",new CachedImageProvider);
-    engine.addImageProvider("noise",new Noise);
+    engine.addImageProvider("noise",new MashNoise);
     //
     //
     //
@@ -48,6 +55,17 @@ int main(int argc, char *argv[])
     //
     //
     engine.load(QUrl(QLatin1String("qrc:/main.qml")));
+    //
+    //
+    //
+    QList<QObject*> rootObjects = engine.rootObjects();
+    for ( auto object : rootObjects ) {
+        if ( object->objectName() == "appWindow" ) {
+            app.connect( &app, &QGuiApplication::commitDataRequest, [object](QSessionManager &manager) {
+                QMetaObject::invokeMethod(object, "save");
+            } );
+        }
+    }
     //
     //
     //

@@ -1,10 +1,14 @@
-#include "noise.h"
+#include "mashnoise.h"
 
-Noise::Noise() : QQuickImageProvider(QQuickImageProvider::Image) {
+#ifndef random
+#define random rand
+#endif
+
+MashNoise::MashNoise() : QQuickImageProvider(QQuickImageProvider::Image) {
 
 }
 
-QImage Noise::requestImage(const QString &id, QSize *size, const QSize &requestedSize) {
+QImage MashNoise::requestImage(const QString &id, QSize *size, const QSize &requestedSize) {
     int width = requestedSize.width() > 0 ? requestedSize.width() : 256;
     int height = requestedSize.height() > 0 ? requestedSize.height() : 256;
     if ( size ) *size = QSize(width, height);
