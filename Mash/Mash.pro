@@ -15,7 +15,17 @@ SOURCES += main.cpp \
     networkaccess.cpp \
     networkconfiguration.cpp \
     effect.cpp \
-    mashnoise.cpp
+    mashnoise.cpp \
+    libqrencode/bitstream.c \
+    libqrencode/mask.c \
+    libqrencode/mmask.c \
+    libqrencode/mqrspec.c \
+    libqrencode/qrencode.c \
+    libqrencode/qrinput.c \
+    libqrencode/qrspec.c \
+    libqrencode/rsecc.c \
+    libqrencode/split.c \
+    qr.cpp
 
 RESOURCES += qml.qrc
 
@@ -56,4 +66,15 @@ HEADERS += \
     networkaccess.h \
     networkconfiguration.h \
     effect.h \
-    mashnoise.h
+    mashnoise.h \
+    libqrencode/bitstream.h \
+    libqrencode/mask.h \
+    libqrencode/mmask.h \
+    libqrencode/mqrspec.h \
+    libqrencode/qrencode_inner.h \
+    libqrencode/qrencode.h \
+    libqrencode/qrinput.h \
+    libqrencode/qrspec.h \
+    libqrencode/rsecc.h \
+    libqrencode/split.h \
+    qr.h

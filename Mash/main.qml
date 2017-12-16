@@ -218,13 +218,18 @@ Window {
                 //
                 mash.content = Utils.decodeHTMLEntities(mash.content);
                 //
+                // extract links
+                //
+                var regexp = /(([a-z]+:\/\/)?(([a-z0-9\-]+\.)+([a-z]{2}|aero|arpa|biz|com|coop|edu|gov|info|int|jobs|mil|museum|name|nato|net|org|pro|travel|local|internal))(:[0-9]{1,5})?(\/[a-z0-9_\-\.~]+)*(\/([a-z0-9_\-\.]*)(\?[a-z0-9+_\-\.%=&amp;]*)?)?(#[a-zA-Z0-9!$&'()*+.=-_~:@\/?]*)?)(\s+|$)/gi;
+                var links = mash.content.match(regexp) || [];
+                //
                 //
                 //
                 //var hAlign = Math.random() > .5 ? Text.AlignLeft : Text.AlignRight;
                 var hAlign = Text.AlignLeft;
                 var vAlign = Math.random() > .5 ? Text.AlignTop : Text.AlignBottom;
                 //textComponent.createObject(mashContainer,{ "x":bounds.x, "y":bounds.y, "width": bounds.width, "height": bounds.height, "text":mash.content, "colour": textColour, "shader": shaders[ currentShader ].mash, "hAlign": hAlign, "vAlign": vAlign});
-                mashContainer.instanciateMash("text",{ "x":bounds.x, "y":bounds.y, "width": bounds.width, "height": bounds.height, "text":mash.content, "colour": textColour, "shader": shaders[ currentShader ].mash, "hAlign": hAlign, "vAlign": vAlign, "tags": mash.tags});
+                mashContainer.instanciateMash("text",{ "x":bounds.x, "y":bounds.y, "width": bounds.width, "height": bounds.height, "text":mash.content, "colour": textColour, "shader": shaders[ currentShader ].mash, "hAlign": hAlign, "vAlign": vAlign, "tags": mash.tags, "links": links });
                 break;
             case "image" :
                 //console.log( 'creating image instance at : ' + JSON.stringify(bounds) );
@@ -761,6 +766,126 @@ Window {
     //
     //
     //
+    function addActiveLinks( links ) {
+        var newLinks = links.slice();
+        //
+        // update existing
+        //
+        activeLinks.forEach( function( linkEntry ) {
+            var index = newLinks.indexOf( linkEntry.link );
+            if ( index >= 0 ) {
+                newLinks.splice( index, 1 );
+                linkEntry.count++;
+            }
+        });
+        //
+        // add new
+        //
+        newLinks.forEach( function( link ) {
+            var linkEntry = {
+                link : link,
+                count: 1
+            };
+            linkDisplay.model.append(linkEntry);
+            activeLinks.push(linkEntry);
+        });
+        console.log( 'add : active links : ' + JSON.stringify(activeLinks));
+    }
+    function removeActiveLinks( links ) {
+        //
+        // update existing
+        //
+        for ( var i = 0; i < activeLinks.length; ) {
+            var index = links.indexOf( activeLinks[ i ].link );
+            if ( index >= 0 ) {
+                activeLinks[ i ].count--;
+                if ( activeLinks[ i ].count <= 0 ) {
+                    linkDisplay.model.remove(i);
+                    activeLinks.splice(i,1);
+                    continue;
+                }
+            }
+            i++;
+        }
+        console.log( 'remove : active links : ' + JSON.stringify(activeLinks));
+    }
+    ListView {
+        id: linkDisplay
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.margins: 16
+        height: 256
+        z: 4
+        spacing: 16
+        orientation: ListView.Horizontal
+        /*
+        add: Transition {
+            NumberAnimation {
+                properties: "y"
+                from: linkDisplay.height + 16
+                to: linkDisplay.height - height
+                duration: 500
+            }
+        }
+
+        remove: Transition {
+            NumberAnimation {
+                properties: "y"
+                to: linkDisplay.height + 16
+                duration: 500
+            }
+        }
+
+        addDisplaced: Transition {
+            NumberAnimation {
+                properties: "x"
+                duration: 500
+            }
+        }
+        removeDisplaced: Transition {
+            NumberAnimation {
+                properties: "x"
+                duration: 500
+            }
+        }
+
+        moveDisplaced: Transition {
+            NumberAnimation {
+                properties: "x"
+                duration: 500
+            }
+        }
+        */
+        model: ListModel {
+
+        }
+        delegate: Image {
+            id: qr
+            //anchors.bottom: parent.bottom
+            source: "image://qr/" + model.link;
+            y: linkDisplay.height + 16
+            //
+            //
+            //
+            ListView.onAdd: NumberAnimation {
+                target: qr;
+                property: "y";
+                to: linkDisplay.height - qr.height; duration: 500; easing.type: Easing.InOutQuad
+            }
+            ListView.onRemove : SequentialAnimation {
+                PropertyAction { target: qr; property: "ListView.delayRemove"; value: true }
+                NumberAnimation { target: qr; property: "y"; to: linkDisplay.height + 16; duration: 500; easing.type: Easing.InOutQuad }
+                PropertyAction { target: qr; property: "ListView.delayRemove"; value: false }
+            }
+            Behavior on x {
+                NumberAnimation { duration: 1000; easing.type: Easing.InOutQuad }
+            }
+        }
+    }
+    //
+    //
+    //
     property variant shaders: [
         { background: "qrc:shaders/underwatercaustics.frag", mash: "qrc:shaders/underwatercaustics-offset.frag" },
         { background: "qrc:shaders/dynamicflow.frag", mash: "qrc:shaders/dynamicflow-offset.frag" },
@@ -795,4 +920,5 @@ Window {
     //
     //
     property var activeTags: []
+    property var activeLinks: []
  }

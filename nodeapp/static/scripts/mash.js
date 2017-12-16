@@ -254,7 +254,7 @@ var utils = {
                     imageFrequency: parseFloat(display.querySelector('input[name="image-frequency"]').value)/100.,
                     globalSpeed: parseFloat(display.querySelector('input[name="global-speed"]').value)/100.,
                     effectSpeed: parseFloat(display.querySelector('input[name="effect-speed"]').value)/100.,
-                    tags: display.querySelector('input[name="tags"]').value,
+                    tags: display.querySelector('input[name="tags"]').value.toLowerCase(),
                     textSource: '',
                     imageSource: ''
                 };
@@ -406,7 +406,7 @@ var utils = {
                     }
                     if ( addTags ) {
                         addTags.onclick = function() {
-                            var additionalTags = newTags.value;
+                            var additionalTags = newTags.value.toLowerCase();
                             if ( additionalTags.length <= 0 ) return;
                             additionalTags = additionalTags.split(',');
                             if ( additionalTags.length <= 0 ) return;
@@ -423,10 +423,15 @@ var utils = {
                                 for ( var tag = 0; tag < tags.length; ++tag ) {
                                     tags[ tag ] = tags[ tag ].trim();
                                 }
+                                for ( var tag = 0; tag < additionalTags.length; ++tag ) {
+                                    additionalTag = additionalTags[ tag ].trim();
+                                    if ( tags.indexOf( additionalTag ) < 0 ) {
+                                        tags.push( additionalTag );
+                                    }
+                                }
                                 var data = {
-                                    'mash.tags': tags.concat(additionalTags)
+                                    'mash.tags': tags
                                 };
-                                
                                 rest.put( endpoint, data, {
                                     onloadend : function( evt ) {
                                         //
@@ -443,23 +448,51 @@ var utils = {
                     }
                     if ( setTags ) {
                         setTags.onclick = function() {
-                            
+                            var replacementTags = newTags.value.toLowerCase();
+                            if ( replacementTags.length <= 0 ) return;
+                            replacementTags = replacementTags.split(',');
+                            if ( replacementTags.length <= 0 ) return;
+                            for ( var tag = 0; tag < replacementTags.length; ++tag ) {
+                                replacementTags[ tag ] = replacementTags[ tag ].trim();
+                            }
+                            //
+                            //
+                            //
+                            updateAllMashes( function( mash ) {
+                                var endpoint = '/mash/' + mash.getAttribute('data-id');
+                                var data = {
+                                    'mash.tags': replacementTags
+                                };
+                                rest.put( endpoint, data, {
+                                    onloadend : function( evt ) {
+                                        //
+                                        // update item in list
+                                        //
+                                        mash.querySelector('input[name="tags"]').value = replacementTags.join();
+                                    },
+                                    onerror : function( evt ) {
+                                        alert( 'error updating item' );
+                                    }
+                                });
+                            });
                         }
                     }
                     if ( deleteAll ) {
                         deleteAll.onclick = function() {
-                            if ( confirm( 'are you sure you want to delete this item?' ) ) {
-                                var endpoint = '/mash/' + mash.getAttribute('data-id');
-                                rest.delete( endpoint, {
-                                    onloadend : function( evt ) {
-                                        //
-                                        // remove item from list
-                                        //
-                                        mash.parentNode.removeChild(mash);
-                                    },
-                                    onerror : function( evt ) {
-                                        alert( 'error delting item' );
-                                    }
+                            if ( confirm( 'are you sure you want to delete these items?' ) ) {
+                                updateAllMashes( function( mash ) {
+                                    var endpoint = '/mash/' + mash.getAttribute('data-id');
+                                    rest.delete( endpoint, {
+                                        onloadend : function( evt ) {
+                                            //
+                                            // remove item from list
+                                            //
+                                            mash.parentNode.removeChild(mash);
+                                        },
+                                        onerror : function( evt ) {
+                                            consol.log( 'error delting item' );
+                                        }
+                                    });
                                 });
                             }
                         }
@@ -500,7 +533,7 @@ var utils = {
                         if ( tagButton ) {
                             tagButton.onclick = function() {
                                 var endpoint = '/mash/' + mash.getAttribute('data-id');
-                                var tags = mash.querySelector('input[name="tags"]').value;
+                                var tags = mash.querySelector('input[name="tags"]').value.toLowerCase();
                                 tags = tags.length > 0 ? tags.split(',') : [];
                                 for ( var tag = 0; tag < tags.length; ++tag ) {
                                     tags[ tag ] = tags[ tag ].trim();

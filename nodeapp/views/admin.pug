@@ -6,10 +6,15 @@ html
     body
         #container
             nav.main
+                a( href='https://ifttt.com' target='_blank' style='margin: 0 4px 0 4px') IFTTT
+                | |
+                a( href='mash-manual.pdf' target='_blank' style='margin: 0 4px 0 4px') manual
+                | |
                 a( href='/account' style='margin: 0 4px 0 4px') account
-                a( href='/logout' style='margin: 0 4px 0 4px') logout
+                | |
+                a( href='/logout' style='margin: 0 16px 0 4px') logout
             h1() MASH - Admin
-            h2() Account #{account}
+            h2#account-number() #{account}
             h2() Displays
             .instance-list
                 include instance.pug

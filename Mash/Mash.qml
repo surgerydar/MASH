@@ -130,12 +130,19 @@ Item {
         if ( tags.length > 0 ) {
             appWindow.addActiveTags(tags);
         }
+        if ( links.length > 0 ) {
+            appWindow.addActiveLinks(links);
+        }
     }
     function stop() {
         //container.destroy();
         container.visible = false;
         if ( tags.length > 0 ) {
             appWindow.removeActiveTags(tags);
+        }
+        if ( links.length > 0 ) {
+            appWindow.removeActiveLinks(links);
+            links = [];
         }
     }
 
@@ -158,4 +165,5 @@ Item {
     property alias shader: effect.fragmentShader
     property alias fadeAnimation: fadeAnimation
     property var tags: []
+    property variant links: []
 }

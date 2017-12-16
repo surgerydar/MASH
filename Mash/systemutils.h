@@ -28,7 +28,7 @@ public slots:
     QString applicationDirectory();
     QString documentDirectory();
     QString temporaryDirectory();
-
+    QString applicationDocumentsDirectory();
 private slots:
     //
     //

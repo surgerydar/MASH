@@ -408,5 +408,5 @@ void AsyncDatabase::_update( QVariantMap& object, QVariantMap& update ) {
 }
 
 QString AsyncDatabase::_path() {
-    return SystemUtils::shared()->documentDirectory().append("/").append("mash.json");
+    return SystemUtils::shared()->applicationDocumentsDirectory().append("/mash.json");
 }

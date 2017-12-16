@@ -79,7 +79,6 @@ db.connect(
     //
     //
     //		
-    
     var app = express();
     //
     //
@@ -319,7 +318,15 @@ db.connect(
             res.render('error', { message: 'registration error : ' + error } );
         });
         */
-        res.render('error', { message: 'unknown operation' } );
+        res.json( formatResponse( null, 'ERROR', 'invalid operation' ) );    
+    });
+    app.get('/setpassword/:id/:key', function( req, res ) {
+        db.findOne( 'user', { $and : [ { account: req.params.account }, { email: req.params.email } ] } ).then( function( user ) {
+            res.render('setpassword', { title: 'Mash - set password', username: user.username, email: user.email } );
+        }).catch( function( error ) {
+            res.render('error', { message: "inavalid request" } );
+        });
+        
     });
     /*
     const updatekey = 'freddo1203';
@@ -346,7 +353,7 @@ db.connect(
     //
     app.get('/admin', isAuthenticated, function(req, res) {
         db.find( 'display', { account: req.user.id } ).then( function( displays ) {
-            res.render('admin', { title: "MASH Admin", account: req.user.id, displays: displays } );
+            res.render('admin', { title: "MASH Admin", account: req.user.account, displays: displays } );
         } ).catch( function( error ) {
             res.render('error', { message: JSON.stringify( error ) } );
         });

@@ -13,6 +13,7 @@
 #include "cachedimageprovider.h"
 #include "networkconfiguration.h"
 #include "mashnoise.h"
+#include "qr.h"
 
 int main(int argc, char *argv[])
 {
@@ -47,6 +48,7 @@ int main(int argc, char *argv[])
     //
     engine.addImageProvider("cached",new CachedImageProvider);
     engine.addImageProvider("noise",new MashNoise);
+    engine.addImageProvider("qr",new Qr);
     //
     //
     //
@@ -62,6 +64,7 @@ int main(int argc, char *argv[])
     for ( auto object : rootObjects ) {
         if ( object->objectName() == "appWindow" ) {
             app.connect( &app, &QGuiApplication::commitDataRequest, [object](QSessionManager &manager) {
+                Q_UNUSED(manager); // JONS: may use in future
                 QMetaObject::invokeMethod(object, "save");
             } );
         }

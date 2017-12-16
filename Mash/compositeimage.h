@@ -19,6 +19,7 @@ public:
 class CompositeImage : public QQuickPaintedItem
 {
     Q_OBJECT
+    Q_PROPERTY(qreal imageScale MEMBER m_imageScale)
 public:
     explicit CompositeImage(QQuickItem *parent = 0);
     //
@@ -43,6 +44,7 @@ private:
     void allocateImage();
     void clearGrabResult( QString id );
     QMutex m_guard;
+    qreal  m_imageScale;
     QImage m_image;
     FadeThread* m_fader;
     QMap< QString,QSharedPointer<QQuickItemGrabResult> > m_grabResults;

@@ -167,7 +167,7 @@ QString CachedImageProvider::cacheLocation(QString&id) {
 }
 
 QString CachedImageProvider::cachePath() {
-    return SystemUtils::shared()->documentDirectory().append("/").append(cacheDirectoryName);
+    return SystemUtils::shared()->applicationDocumentsDirectory().append("/").append(cacheDirectoryName);
 }
 
 void CachedImageProvider::load() {

@@ -26,7 +26,7 @@ void Settings::load() {
     //
     // assume the path is relative to documents directory
     //
-    QString fullpath = SystemUtils::shared()->documentDirectory().append("/").append(m_file);
+    QString fullpath = SystemUtils::shared()->applicationDocumentsDirectory().append("/").append(m_file);
     //
     // open
     //
@@ -63,7 +63,7 @@ void Settings::save() {
     //
     // assume the path is relative to documents directory
     //
-    QString fullpath = SystemUtils::shared()->documentDirectory().append("/").append(m_file);
+    QString fullpath = SystemUtils::shared()->applicationDocumentsDirectory().append("/").append(m_file);
     //
     // open
     //

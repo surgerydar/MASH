@@ -9,6 +9,7 @@ MashNoise::MashNoise() : QQuickImageProvider(QQuickImageProvider::Image) {
 }
 
 QImage MashNoise::requestImage(const QString &id, QSize *size, const QSize &requestedSize) {
+    Q_UNUSED(id);
     int width = requestedSize.width() > 0 ? requestedSize.width() : 256;
     int height = requestedSize.height() > 0 ? requestedSize.height() : 256;
     if ( size ) *size = QSize(width, height);

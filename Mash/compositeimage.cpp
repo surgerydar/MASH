@@ -45,6 +45,7 @@ void FadeThread::run() {
 
 CompositeImage::CompositeImage(QQuickItem *parent) : QQuickPaintedItem(parent) {
     m_fader = nullptr;
+    m_imageScale = 1.;
 }
 
 void CompositeImage::paint(QPainter *painter) {
@@ -62,6 +63,7 @@ void CompositeImage::addImage( QQuickItem *image ) {
     allocateImage();
     QRectF bounds( image->x(), image->y(), image->width(), image->height());
     bounds = image->mapRectToItem(this,bounds);
+    bounds.setRect( bounds.x()*m_imageScale, bounds.y()*m_imageScale, bounds.width()*m_imageScale, bounds.height()*m_imageScale);
     qreal opacity = image->opacity();
     QSharedPointer<QQuickItemGrabResult> result = image->grabToImage();
     if ( result ) {
@@ -95,7 +97,7 @@ void CompositeImage::addImage( QQuickItem *image ) {
 void CompositeImage::save() {
     QMutexLocker locker(&m_guard);
     qDebug() << "CompositeImage::save";
-    QString path = SystemUtils::shared()->documentDirectory().append("/").append("mash-composite.png");
+    QString path = SystemUtils::shared()->applicationDocumentsDirectory().append("/").append("mash-composite.png");
     m_image.save(path);
     qDebug() << "CompositeImage::save : done";
 }
@@ -104,7 +106,7 @@ void CompositeImage::load() {
     QMutexLocker locker(&m_guard);
     qDebug() << "CompositeImage::load";
 
-    QString path = SystemUtils::shared()->documentDirectory().append("/").append("mash-composite.png");
+    QString path = SystemUtils::shared()->applicationDocumentsDirectory().append("/").append("mash-composite.png");
     if ( QFile::exists(path) ) {
         m_image.load(path);
         qDebug() << "CompositeImage::load : done";
@@ -123,15 +125,16 @@ void CompositeImage::stop() {
 }
 
 void CompositeImage::allocateImage() {
-    if ( m_image.width() != width() || m_image.height() != height() ) {
+    QSize targetSize( width() * m_imageScale, height() * m_imageScale);
+    if ( m_image.width() != targetSize.width() || m_image.height() != targetSize.height() ) {
         qDebug() << "CompositeImage::allocateImage : " << width() << "x" << height();
         QMutexLocker locker(&m_guard);
         QImage current = m_image;
-        m_image = QImage(width(),height(),QImage::Format_ARGB32_Premultiplied);
+        m_image = QImage(targetSize.width(),targetSize.height(),QImage::Format_ARGB32_Premultiplied);
         if ( current.isNull() ) {
             m_image.fill(Qt::black);
         } else {
-            QRect bounds(0,0,width(),height());
+            QRect bounds(0,0,m_image.width(),m_image.height());
             QPainter painter(&m_image);
             painter.drawImage(bounds,current);
         }

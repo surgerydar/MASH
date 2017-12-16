@@ -9,7 +9,7 @@ mixin display(instance)
         input( type='range' name='global-speed' min='25' max='400' step='1' value= globalSpeed )
         label.instance-label( for='image-frequency' ) Image Frequency
         - var imageFrequency = instance.configuration.imageFrequency * 100
-        input( type='range' name='image-frequency' min='25' max='200' step='1' value= imageFrequency )
+        input( type='range' name='image-frequency' min='25' max='400' step='1' value= imageFrequency )
         label.instance-label( for='effect-index' ) Effect
         input( type='number' name='effect-index' min='0' max='5' value= instance.configuration.effect )
         label.instance-label( for='effect-speed' ) Effect Speed

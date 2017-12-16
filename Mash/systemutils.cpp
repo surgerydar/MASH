@@ -26,7 +26,7 @@ SystemUtils* SystemUtils::shared() {
 //
 //
 bool SystemUtils::isFirstRun() {
-    QString dbPath = documentDirectory().append("/mash.json");
+    QString dbPath = applicationDocumentsDirectory().append("/mash.json");
     return !QFile::exists(dbPath);
 }
 
@@ -48,13 +48,21 @@ QString SystemUtils::applicationDirectory() {
 }
 
 QString SystemUtils::documentDirectory() {
-    //return QStandardPaths::writableLocation(QStandardPaths::HomeLocation).append("/Documents/");
     return QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
 }
 
 QString SystemUtils::temporaryDirectory() {
     return "";
 }
+
+QString SystemUtils::applicationDocumentsDirectory() {
+    QDir documentDir( documentDirectory() );
+    if ( !documentDir.exists("mash") ) {
+        documentDir.mkdir("mash");
+    }
+    return documentDirectory().append("/mash");
+}
+
 //
 //
 //

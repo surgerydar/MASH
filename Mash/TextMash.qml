@@ -25,7 +25,6 @@ Mash {
         //
         Component.onCompleted: {
             container.sourceItem = content;
-            fadeAnimation.start();
         }
     }
     //
