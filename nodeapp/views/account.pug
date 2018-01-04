@@ -6,8 +6,17 @@ html
     body
         #container
             nav.main
-                a( href='/admin' ) admin
-                a( href='/logout' ) logout
+                a( href='https://ifttt.com' target='_blank' style='margin: 0 4px 0 4px') IFTTT
+                | |
+                a( href='mash-manual.pdf' target='_blank' style='margin: 0 4px 0 4px') manual
+                | |
+                a( href='/admin' style='margin: 0 4px 0 4px') admin
+                | |
+                a( href='/logout' style='margin: 0 16px 0 4px') logout
             h1() MASH - Admin
-            h2() Account #{account}
+            h2() Account #{user.account}
+            h2() User #{user.id}
+            if user.role === 2
+                h2( style='text-align: center' ) Users                
+                #user-list.user-container( data-account= user.account )
         script(src='/scripts/mash.js')

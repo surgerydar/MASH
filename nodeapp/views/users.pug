@@ -1,0 +1,12 @@
+.user-container
+    nav.content
+        div( style='margin: 0px 8px 0px 8px;')
+            button( style='margin: 8px; width: auto;' name='invite-user' ) invite user 
+    each user in users
+        .user-list-item( id= user.id )
+            span= user.username
+            span= user.email
+            select( name='role' value= user.role )
+                option( value='0' selected= user.role === 0 ) user
+                option( value='1' selected= user.role === 1 ) admin
+                option( value='2' selected= user.role === 2 ) sysadmin

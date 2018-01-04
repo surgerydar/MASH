@@ -565,7 +565,6 @@ var utils = {
             var endpoint = '/mash/' + account.substring( 1, account.length -1 ) + '/' + type + '/' + tags + '/' + pagenumber + '/' + pagesize + '/html';
             rest.get(endpoint, {
                 onloadend: function(evt) {
-                    //display.inner
                     var response = rest.getresponse(evt);
                     var doc = new DOMParser().parseFromString(response, "text/html");
                     if ( doc ) {
@@ -585,6 +584,27 @@ var utils = {
         loadMash( account, 'all', 'all', 0, 16 );
     }
     //
+    // hook userlist
     //
-    //
+    var userList = d.querySelector('#user-list');
+    if ( userList ) {
+        function loadUsers( account ) {
+            var endpoint = '/users/'  + account.substring( 1, account.length -1 ) + '/html'
+            rest.get(endpoint, {
+                onloadend: function(evt) {
+                    var response = rest.getresponse(evt);
+                    var doc = new DOMParser().parseFromString(response, "text/html");
+                    if ( doc ) {
+                        var container = doc.querySelector('.user-container');
+                        if ( container ) {
+                            userList.innerHTML = container.innerHTML;
+                            //hookMash( mashContainer );
+                        }
+                    }
+                }
+            });
+        }
+        var account = userList.getAttribute( 'data-account' );
+        loadUsers( account );//, 'all', 'all', 0, 16 );
+    }
 })(window,document);

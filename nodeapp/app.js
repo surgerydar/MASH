@@ -41,7 +41,12 @@ db.connect(
             db.findOne( 'user', { username: username } ).then( function(user) {
                 console.log( 'found user : ' + JSON.stringify(user) );
                 if (user && bcrypt.compareSync(password, user.password) ) {
-                    callback(null, user);
+                    callback(null, { // JONS: return redacted user entry
+                        id: user.id,
+                        username: user.username,
+                        role: user.role,
+                        account: user.account
+                    });
                 } else {
                     callback(null, false);
                 }
@@ -362,7 +367,7 @@ db.connect(
     //
     //
     app.get('/account', isAuthenticated, function(req, res) {
-        res.render('account', { message: JSON.stringify( error ) } );
+        res.render('account', { user: req.user } );
         /*
         db.find( 'mash', {"mash.type": "image"} ).then( function( images ) {
             db.find( 'mash', {"mash.type": "text"} ).then( function( texts ) {
@@ -383,6 +388,18 @@ db.connect(
         var id = req.params.id;
         db.findOne( 'display', { $and: [ { account: req.user.id }, { display: id } ] } ).then( function( response ) {
             res.render( 'display', { display: response } );
+        }).catch( function( error ) {
+            res.render('error', { message: JSON.stringify( error ) } );
+        });
+    });
+    app.get('/users/:account/:format', isAuthenticated, function(req, res) {
+        var query = { account: '{' + req.params.account + '}' };
+        db.find( 'user', query, { password: 0 } ).then( function( response ) {
+            if ( req.params.format === 'html' ) {
+                res.render( 'users', { users: response } );
+            } else {
+                res.json( formatResponse( response, 'OK' ) );
+            }
         }).catch( function( error ) {
             res.render('error', { message: JSON.stringify( error ) } );
         });
